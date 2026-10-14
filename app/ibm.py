@@ -15,7 +15,9 @@ SHOTS = 4096
 def settings():
     return {
         "token": os.environ.get("IBM_QUANTUM_TOKEN", ""), "instance": os.environ.get("IBM_QUANTUM_INSTANCE") or None,
-        "backend": os.environ.get("IBM_BACKEND", "ibm_kingston"), "code": os.environ.get("QSEGMENT_ACCESS_CODE", ""),
+        "backend": os.environ.get("IBM_BACKEND", "ibm_kingston"),
+        "chips": [c.strip() for c in os.environ.get("IBM_BACKENDS", "ibm_kingston,ibm_fez,ibm_marrakesh").split(",") if c.strip()],
+        "code": os.environ.get("QSEGMENT_ACCESS_CODE", ""),
         "max_seconds": int(os.environ.get("IBM_MAX_SECONDS", "30")), "per_hour": int(os.environ.get("IBM_MAX_RUNS_PER_HOUR", "3")),
         "min_remaining": int(os.environ.get("IBM_MIN_REMAINING_SECONDS", "60")), "dry_run": os.environ.get("IBM_DRY_RUN") == "1",
     }
@@ -24,6 +26,12 @@ def settings():
 def available():
     s = settings()
     return bool(s["code"]) and (bool(s["token"]) or s["dry_run"])
+
+
+def chip_for(payload):
+    s = settings()
+    chip = str(payload.get("chip") or s["backend"])
+    return chip if chip in s["chips"] else None
 
 
 def code_ok(code):
@@ -83,6 +91,7 @@ def _fake_counts(prep):
 
 def _work(job_id, payload):
     s = settings()
+    chip = chip_for(payload) or s["backend"]
     try:
         prep = solver.prepare(payload)
         if s["dry_run"]:
@@ -96,12 +105,12 @@ def _work(job_id, payload):
             remaining = service.usage().get("usage_remaining_seconds")
             if remaining is not None and remaining < s["min_remaining"]:
                 raise RuntimeError("The IBM time allowance is almost used up, so chip runs are paused.")
-            backend = service.backend(s["backend"])
+            backend = service.backend(chip)
             isa = transpile(prep["bound"], backend, optimization_level=3, seed_transpiler=1)
             two_q = int(sum(v for k, v in isa.count_ops().items() if k in ("cz", "ecr", "cx")))
             job = SamplerV2(mode=backend, options={"max_execution_time": s["max_seconds"]}).run([isa], shots=SHOTS)
             ibm_id = job.job_id()
-            set_job(job_id, status="queued", backend=s["backend"], ibm_job_id=ibm_id)
+            set_job(job_id, status="queued", backend=chip, ibm_job_id=ibm_id)
             while True:
                 st = str(job.status()).upper()
                 if "DONE" in st:
@@ -118,7 +127,7 @@ def _work(job_id, payload):
         if not indices:
             raise RuntimeError("None of the chip's readouts was a valid split. Try again.")
         best_idx = solver.best_after_cleanup(prep, list(indices))
-        result = solver.summary(prep, best_idx, {"engine": "ibm-quantum", "backend": s["backend"] if not s["dry_run"] else "dry-run",
+        result = solver.summary(prep, best_idx, {"engine": "ibm-quantum", "backend": chip if not s["dry_run"] else "dry-run",
                                                  "ibm_job_id": ibm_id, "chip_seconds": chip_seconds, "valid_share": round(valid_share, 4),
                                                  "two_qubit_gates_routed": two_q, "shots": SHOTS})
         set_job(job_id, status="done", result=result)

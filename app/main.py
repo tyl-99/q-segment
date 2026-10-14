@@ -17,8 +17,9 @@ def page():
 
 @app.get("/api/health")
 def health():
-    backends = ["simulator"] + (["ibm"] if ibm.available() else [])
-    return {"ok": True, "qiskit": qiskit.__version__, "backends": backends}
+    on = ibm.available()
+    return {"ok": True, "qiskit": qiskit.__version__, "backends": ["simulator"] + (["ibm"] if on else []),
+            "ibm_chips": ibm.settings()["chips"] if on else [], "ibm_default": ibm.settings()["backend"]}
 
 
 @app.post("/api/run")
@@ -35,6 +36,8 @@ def run(payload: dict):
         raise HTTPException(status_code=503, detail="Real IBM runs are not set up on this server.")
     if not ibm.code_ok(payload.get("access_code")):
         raise HTTPException(status_code=401, detail="That access code is not valid.")
+    if not ibm.chip_for(payload):
+        raise HTTPException(status_code=400, detail="That IBM chip is not offered here.")
     try:
         solver.parse_network(payload)
     except solver.NetworkError as err:

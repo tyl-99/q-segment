@@ -217,8 +217,14 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
         <div class="qrow">
           <label for="qMode">Run on</label>
           <select id="qMode" class="qsel">
-            <option value="sim" selected>Quantum simulator</option>
-            <option value="ibm">Real IBM quantum chip</option>
+            <optgroup label="Simulator">
+              <option value="sim" selected>Qiskit simulator</option>
+            </optgroup>
+            <optgroup label="IBM Quantum · Heron, 156 qubits">
+              <option value="ibm:ibm_kingston">ibm_kingston (default chip)</option>
+              <option value="ibm:ibm_fez">ibm_fez</option>
+              <option value="ibm:ibm_marrakesh">ibm_marrakesh</option>
+            </optgroup>
           </select>
         </div>
         <div class="qrow" id="qCodeRow" hidden>
@@ -805,10 +811,10 @@ svg.addEventListener("drop", ev => {
 const QLIMIT = 20000;
 const RUN_LABEL = "Segment my network";
 function syncQuantum() {
-  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value === "ibm";
+  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
   const size = Math.pow(K, Math.max(n - 1, 0)), note = $("qIbmNote");
   $("qCodeRow").hidden = !ibm; note.hidden = !ibm;
-  if (ibm) note.textContent = !state.server ? "Real chip runs work only on the live site." : !state.ibm ? "Real chip runs are not switched on for this site yet." : "Runs on IBM's ibm_kingston chip. Waiting in IBM's queue can take a while.";
+  if (ibm) note.textContent = !state.server ? "Real chip runs work only on the live site." : !state.ibm ? "Real chip runs are not switched on for this site yet." : `Runs on IBM's ${chip}, a 156-qubit Heron chip. Waiting in IBM's queue can take a while.`;
   const ready = !ibm || (state.server && state.ibm && $("qCode").value.trim().length > 0);
   if (b.querySelector(".spin")) return;
   b.disabled = !(n >= 2 && size <= QLIMIT && ready);
@@ -816,7 +822,7 @@ function syncQuantum() {
 }
 $("runQuantum").addEventListener("click", () => {
   const b = $("runQuantum"); if (b.disabled) return;
-  const ibm = $("qMode").value === "ibm";
+  const ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
   b.disabled = true; b.innerHTML = `<span class="spin"></span> Running…`;
   state.qres = null; state.plan = null; state.K = 0; renderCanvas();
   $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span><span class="msg">${ibm ? "Building the circuit…" : "Running the quantum circuit…"}</span></div>`;
@@ -831,7 +837,7 @@ $("runQuantum").addEventListener("click", () => {
   const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">The chip run did not finish</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
   const body = { zones: K, backend: ibm ? "ibm" : "simulator", nodes: state.nodes.map(n => ({ name: n.name })), links: state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })) };
   if (ibm) {
-    body.access_code = $("qCode").value.trim();
+    body.access_code = $("qCode").value.trim(); body.chip = chip;
     const steps = { preparing: "Building the circuit…", queued: "Waiting in IBM's queue…", reading: "Reading the chip's answers…" };
     const poll = id => fetch(`/api/job/${id}`, { cache: "no-store" }).then(r => r.json()).then(j => {
       if (j.status === "done") { const r = j.result; window.qsegmentLastRun = r; finish(pack({ K, z: r.zones, bestCost: r.cost, exactBest: r.best_possible, ms: r.compute_ms, engine: "ibm", chip: r.chip_seconds, jobId: r.ibm_job_id, backend: r.backend })); }
@@ -856,7 +862,7 @@ $("qCode").addEventListener("input", syncQuantum);
   try {
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 1500);
     const r = await fetch("/api/health", { cache: "no-store", signal: ctl.signal }); clearTimeout(timer);
-    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); }
+    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); if (state.ibm && Array.isArray(j.ibm_chips)) document.querySelectorAll('#qMode option[value^="ibm:"]').forEach(o => { o.disabled = !j.ibm_chips.includes(o.value.slice(4)); }); }
   } catch (e) { state.server = false; }
   syncQuantum();
 })();
