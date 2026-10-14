@@ -857,16 +857,17 @@ $("runQuantum").addEventListener("click", () => {
     .catch(err => { console.warn("Server run failed, using the in-browser simulator instead.", err); finish(local()); });
 });
 $("qCode").addEventListener("input", syncQuantum);
-(async () => {
+async function checkServer() {
   if (!/^https?:$/.test(location.protocol)) return;
   try {
-    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 1500);
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);
     const r = await fetch("/api/health", { cache: "no-store", signal: ctl.signal }); clearTimeout(timer);
     if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); if (state.ibm && Array.isArray(j.ibm_chips)) document.querySelectorAll('#qMode option[value^="ibm:"]').forEach(o => { o.disabled = !j.ibm_chips.includes(o.value.slice(4)); }); }
   } catch (e) { state.server = false; }
   syncQuantum();
-})();
-$("qMode").addEventListener("change", syncQuantum);
+}
+checkServer();
+$("qMode").addEventListener("change", () => { syncQuantum(); if ($("qMode").value.startsWith("ibm") && !state.ibm) checkServer(); });
 $("qK").addEventListener("change", () => { state.qres = null; state.plan = null; state.K = 0; renderAll(); });
 loadPreset("hospital");
 syncK();
