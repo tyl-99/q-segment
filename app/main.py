@@ -12,7 +12,7 @@ app = FastAPI(title="Q-Segment", docs_url=None, redoc_url=None)
 
 @app.get("/")
 def page():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api/health")
