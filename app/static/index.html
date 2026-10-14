@@ -764,8 +764,8 @@ function applyTheme(t) {
   const b = $("themeBtn"), next = t === "dark" ? "light" : "dark";
   b.innerHTML = t === "dark" ? SUN : MOON; b.setAttribute("aria-label", `Switch to ${next} mode`); b.title = `Switch to ${next} mode`;
 }
-let theme = "dark";
-try { theme = localStorage.getItem("qsegment-theme") || "dark"; } catch (e) {}
+let theme = "light";
+try { theme = localStorage.getItem("qsegment-theme") || "light"; } catch (e) {}
 applyTheme(theme);
 $("themeBtn").addEventListener("click", () => {
   theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
