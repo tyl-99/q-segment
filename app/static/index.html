@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Q-Segment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: a three-column workbench on a dark navy instrument panel, the same world as the pitch deck:
+   toolbox | network canvas | quantum run + zone plan. One accent (teal) for action, zone hues only for results. */
+:root {
+  --bg: #0F1A2B; --canvas: #111F33; --surface: #14233A; --raised: #1B2D45; --line: #26384F; --wire: #34465F;
+  --fg: #F3EEE6; --muted: #A9B4C2; --faint: #6F7F96;
+  --accent: #2EC4B6; --accent-ink: #0F1A2B; --accent-soft: rgba(46, 196, 182, 0.18); --coral: #FF7A5C;
+  --good: #3DD68C; --bad: #FF6B6B; --warn: #F2A33A;
+  --zoneA: #2EC4B6; --zoneB: #6AA9FF; --zoneC: #B79BFF;
+  --t-col: #6AA9FF; --r-col: #FF7A5C;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --glow: rgba(46, 196, 182, 0.08); --logo-cell: #24384F; --logo-line: #6A82A3; --thumb: #F3EEE6;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #F2F5F9; --canvas: #FFFFFF; --surface: #FFFFFF; --raised: #F1F4F8; --line: #E0E6EE; --wire: #C7D1DD;
+  --fg: #0F1A2B; --muted: #55657C; --faint: #8794A7;
+  --accent: #11A396; --accent-ink: #FFFFFF; --accent-soft: rgba(17, 163, 150, 0.16); --coral: #EE5F3E;
+  --good: #129A63; --bad: #E5484D; --warn: #B86E00;
+  --zoneA: #11A396; --zoneB: #3B7FE8; --zoneC: #8656E8; --t-col: #3B7FE8; --r-col: #EE5F3E;
+  --glow: rgba(17, 163, 150, 0.07); --logo-cell: #0F1A2B; --logo-line: #0F1A2B; --thumb: #FFFFFF; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #F2F5F9; --canvas: #FFFFFF; --surface: #FFFFFF; --raised: #F1F4F8; --line: #E0E6EE; --wire: #C7D1DD;
+  --fg: #0F1A2B; --muted: #55657C; --faint: #8794A7;
+  --accent: #11A396; --accent-ink: #FFFFFF; --accent-soft: rgba(17, 163, 150, 0.16); --coral: #EE5F3E;
+  --good: #129A63; --bad: #E5484D; --warn: #B86E00;
+  --zoneA: #11A396; --zoneB: #3B7FE8; --zoneC: #8656E8; --t-col: #3B7FE8; --r-col: #EE5F3E;
+  --glow: rgba(17, 163, 150, 0.07); --logo-cell: #0F1A2B; --logo-line: #0F1A2B; --thumb: #FFFFFF; color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: radial-gradient(1100px 520px at 8% -12%, var(--glow), transparent 62%), var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app { max-width: 1420px; margin: 0 auto; padding-inline: 20px; padding-block: 18px 40px; display: flex; flex-direction: column; gap: 16px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; margin-right: 14px; min-width: 0; }
+.brand > span:last-child { font-family: var(--display); font-weight: 700; font-size: 1.3rem; letter-spacing: -0.01em; line-height: 1.15; }
+.brand small { display: block; font-family: var(--body); font-weight: 400; font-size: 0.8rem; color: var(--muted); letter-spacing: 0; }
+.logo { width: 42px; height: 42px; flex: none; }
+.logo svg { width: 100%; height: 100%; display: block; }
+.lg-cell { fill: var(--logo-cell); stroke: var(--logo-line); }
+.btn.icon { padding: 8px; width: 38px; height: 38px; }
+.btn.icon svg { width: 18px; height: 18px; }
+.grow { flex: 1 1 8px; }
+.vsep { width: 1px; align-self: stretch; margin: 4px 2px; background: var(--line); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--wire); background: var(--raised); color: var(--fg); font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s, transform .1s, filter .15s; white-space: nowrap; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover:not(:disabled) { background: var(--raised); border-color: var(--line); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-family: var(--display); font-weight: 700; letter-spacing: 0.01em; box-shadow: 0 10px 26px -12px var(--accent); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.07); }
+.btn.primary:disabled { background: var(--raised); border-color: var(--wire); color: var(--faint); box-shadow: none; }
+.btn.danger { color: var(--bad); }
+.btn.danger:hover:not(:disabled) { background: rgba(255, 107, 107, 0.1); border-color: var(--bad); }
+.btn.small { padding: 5px 12px; font-size: 0.8rem; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+.main { display: grid; grid-template-columns: 188px minmax(0, 1.6fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+.sidebar { padding: 14px 12px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.toolbox { display: flex; flex-direction: column; gap: 7px; }
+.toolbox .hint { font-size: 0.76rem; color: var(--muted); margin: 2px 4px 8px; line-height: 1.4; }
+.tool { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 10px 12px; background: var(--raised); border: 1px solid transparent; border-radius: 10px; cursor: grab; font-size: 0.85rem; font-weight: 600; color: var(--fg); text-align: left; white-space: nowrap; transition: border-color .15s, transform .1s, background .15s; }
+.tool:hover { border-color: var(--accent); transform: translateX(2px); }
+.tool:active { cursor: grabbing; }
+.tool svg { width: 20px; height: 20px; flex: none; color: var(--accent); }
+.tool span { overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+
+svg#canvas { width: 100%; height: auto; display: block; touch-action: none; border-radius: 14px; border: 1px solid var(--line); background: radial-gradient(circle at 1px 1px, var(--line) 1.15px, transparent 1.3px) 0 0 / 22px 22px, var(--canvas); }
+.nodeg text { font-family: var(--display); }
+.hit:hover { stroke-opacity: 0.18; }
+.port .dot { opacity: 0; transition: opacity .12s; }
+.nodeg:hover .port .dot, .port:hover .dot { opacity: 1; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: var(--muted); font-size: 0.82rem; margin-top: 12px; min-height: 30px; }
+.legend i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 7px; border-radius: 2px; }
+.legend .grow { flex: 1; }
+
+.editor { margin-top: 12px; padding: 14px 16px; background: var(--raised); border: 1px solid var(--line); border-radius: 14px; min-height: 64px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+.editor .hintbox { color: var(--muted); font-size: 0.85rem; line-height: 1.55; max-width: 72ch; }
+.editor .hintbox b { color: var(--fg); font-weight: 600; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--wire); border-radius: 99px; font-weight: 600; font-size: 0.86rem; }
+.chip svg { width: 16px; height: 16px; color: var(--accent); }
+.pair { display: flex; flex: 1 0 100%; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pair .arrow { color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 150px; min-width: 130px; }
+.field:has(.input) { flex: 0 1 auto; }
+.field .fhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.field .fhead b { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0; color: var(--fg); font-variant-numeric: tabular-nums; }
+.field small { color: var(--muted); font-size: 0.74rem; line-height: 1.3; max-width: 200px; }
+.input { border: 1px solid var(--wire); border-radius: 10px; padding: 8px 12px; background: var(--surface); color: var(--fg); width: 180px; max-width: 100%; transition: border-color .15s, box-shadow .15s; }
+.input:focus, .qsel:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+select.input, .qsel { -webkit-appearance: none; appearance: none; padding-right: 34px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A9B4C2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; margin: 8px 0; border-radius: 99px; outline: none; cursor: pointer; background: linear-gradient(to right, var(--c, var(--accent)) var(--p, 0%), var(--wire) var(--p, 0%)); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--thumb); border: 3px solid var(--c, var(--accent)); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); transition: transform .12s; }
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.12); }
+input[type="range"]::-moz-range-track { background: transparent; }
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--thumb); border: 3px solid var(--c, var(--accent)); }
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--accent-soft); }
+.rng-traffic { --c: var(--t-col); }
+.rng-risk { --c: var(--r-col); }
+
+.muted { color: var(--muted); }
+.big { font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+.note { color: var(--muted); font-size: 0.85rem; }
+.warn { color: var(--warn); }
+.empty { display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+.kpis.two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0 4px; }
+.kpi { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.kpi b { display: block; font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 0.78rem; line-height: 1.3; display: block; }
+.zcard { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+.zcard h4 { margin: 0 0 9px; font-family: var(--display); font-size: 0.98rem; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+.zcard h4::before { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--zc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--zc) 22%, transparent); flex: none; }
+.zcard h4 .muted { font-family: var(--body); font-weight: 500; font-size: 0.82rem; }
+.zchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.zchips .chip { font-size: 0.82rem; padding: 4px 11px; }
+.zchips .chip svg { color: var(--zc); }
+.zonenote { margin: 0 0 10px; padding: 10px 12px; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; color: var(--fg); font-size: 0.84rem; }
+details.more { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+details.more summary { cursor: pointer; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 8px; list-style: none; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "›"; display: inline-block; font-size: 1.2rem; line-height: 1; transition: transform .15s; }
+details.more[open] summary::before { transform: rotate(90deg); }
+details.more h3 { display: flex; align-items: center; gap: 8px; }
+.badge { display: inline-block; min-width: 22px; padding: 1px 8px; border-radius: 99px; text-align: center; font-size: 0.72rem; letter-spacing: 0; text-transform: none; font-weight: 700; }
+.badge.bad { background: rgba(255, 107, 107, 0.15); color: var(--bad); }
+.badge.warn { background: rgba(242, 163, 58, 0.16); color: var(--warn); }
+.plist { display: flex; flex-direction: column; gap: 6px; }
+.prow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; flex-wrap: wrap; }
+.pnames { font-weight: 600; font-size: 0.85rem; }
+.pnames .sep { color: var(--muted); margin: 0 6px; font-weight: 400; }
+.pnums { display: flex; gap: 5px; flex: none; }
+.num { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.num.t { background: rgba(106, 169, 255, 0.15); color: var(--t-col); }
+.num.r { background: rgba(255, 122, 92, 0.15); color: var(--r-col); }
+.num.zero { opacity: 0.4; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.pill { display: inline-block; font-size: 0.72rem; font-weight: 600; border: 1px solid var(--wire); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+h3 { margin: 16px 0 8px; font-family: var(--display); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+
+.rightcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.qcard .qhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.qcard .qhead h3 { margin: 0; color: var(--fg); font-size: 0.82rem; }
+.qrow { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.qrow label { width: 58px; flex: none; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.qsel { flex: 1; min-width: 0; border: 1px solid var(--wire); background-color: var(--raised); color: var(--fg); border-radius: 10px; padding: 9px 34px 9px 12px; font-weight: 600; }
+.qsel option { background: var(--surface); color: var(--fg); }
+.qgo { width: 100%; padding: 12px 16px; font-size: 1rem; margin-top: 4px; }
+#qOut:empty { display: none; }
+#qOut { margin-top: 12px; }
+.spin { display: inline-block; width: 15px; height: 15px; border: 2px solid color-mix(in srgb, var(--accent-ink) 32%, transparent); border-top-color: var(--accent-ink); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; }
+.spin.big { width: 36px; height: 36px; border-width: 3px; border-color: var(--accent-soft); border-top-color: var(--accent); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 8px; color: var(--muted); font-size: 0.88rem; text-align: center; }
+ul.plain { margin: 4px 0; padding-left: 18px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+@media (max-width: 1060px) { .main { grid-template-columns: 170px minmax(0, 1fr); } .rightcol { grid-column: 1 / -1; } }
+@media (max-width: 720px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { position: static; }
+  .toolbox { flex-direction: row; flex-wrap: wrap; }
+  .toolbox .hint { flex: 1 0 100%; }
+  .app { padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .tool, .btn, .port .dot { transition: none; } .spin { animation-duration: 2s; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Q-Segment"><g class="lg-cell" stroke-width="2.2" stroke-linejoin="round"><polygon points="41.3,7.6 57.8,17.1 57.8,36.1 41.3,45.6 24.9,36.1 24.9,17.1"/><polygon points="19.7,45.0 36.1,54.5 36.1,73.5 19.7,83.0 3.3,73.5 3.3,54.5"/><polygon points="62.9,45.0 79.4,54.5 79.4,73.5 62.9,83.0 46.5,73.5 46.5,54.5"/><polygon points="41.3,82.4 57.8,91.9 57.8,110.9 41.3,120.4 24.9,110.9 24.9,91.9"/></g><g fill="#F2A33A"><polygon points="84.5,5.1 103.1,15.8 103.1,37.3 84.5,48.0 65.9,37.3 65.9,15.8"/><polygon points="106.2,42.5 124.7,53.2 124.7,74.7 106.2,85.4 87.6,74.7 87.6,53.2"/><polygon points="84.5,80.0 103.1,90.7 103.1,112.2 84.5,122.9 65.9,112.2 65.9,90.7"/></g></svg></span><span>Q-Segment<small>Network zoning that balances security and business.</small></span></div>
+    <span class="grow"></span>
+    <button type="button" class="btn ghost" id="template" title="Load the 8-system hospital example we used in our runs">Load Template</button>
+    <button type="button" class="btn ghost" id="clear">Clear</button>
+    <button type="button" class="btn ghost icon" id="themeBtn" aria-label="Switch to light mode" title="Switch to light mode"></button>
+  </header>
+
+  <div class="main">
+    <aside class="card sidebar" aria-label="Toolbox"><div class="toolbox" id="toolbox"></div></aside>
+    <section class="card" aria-label="Topology">
+      <svg id="canvas" viewBox="0 0 760 520" role="img" aria-label="Network topology editor"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="editor" id="editor"></div>
+    </section>
+
+    <div class="rightcol">
+      <section class="card qcard" aria-label="Quantum run">
+        <div class="qhead"><h3>Quantum run</h3></div>
+        <div class="qrow">
+          <label for="qK">Zones</label>
+          <select id="qK" class="qsel">
+            <option value="3" selected>3 zones</option>
+            <option value="2">2 zones</option>
+          </select>
+        </div>
+        <div class="qrow">
+          <label for="qMode">Run on</label>
+          <select id="qMode" class="qsel">
+            <option value="sim" selected>Quantum simulator</option>
+            <option value="ibm" disabled>Real IBM chip (presenter only)</option>
+          </select>
+        </div>
+        <button type="button" class="btn primary qgo" id="runQuantum" disabled>Run quantum</button>
+        <div id="qOut"></div>
+      </section>
+      <aside class="card" aria-label="Zone plan"><div id="tab-result"></div></aside>
+    </div>
+  </div>
+</div>
+
+<script>
+//CORE-START
+const ZN = ["A", "B", "C"];
+function makeModel(nodes, links) {
+  return { n: nodes.length, names: nodes.map(x => x.name), A: links.map(l => l.a), B: links.map(l => l.b), T: links.map(l => l.t), R: links.map(l => l.r) };
+}
+function partitionCost(m, z) {
+  let c = 0;
+  for (let k = 0; k < m.A.length; k++) c += z[m.A[k]] !== z[m.B[k]] ? m.T[k] : m.R[k];
+  return c;
+}
+function decode(idx, n, K) {
+  const z = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) { z[i] = idx % K; idx = (idx - z[i]) / K; }
+  return z;
+}
+function canonical(z) {
+  const map = new Map(); const out = z.map(v => { if (!map.has(v)) map.set(v, map.size); return map.get(v); });
+  return out;
+}
+function bruteForce(m, K) {
+  const total = Math.pow(K, m.n - 1);
+  const costs = K === 2 ? new Float64Array(total) : null;
+  let best = Infinity, bestIdx = [];
+  for (let idx = 0; idx < total; idx++) {
+    const z = decode(idx, m.n, K);
+    const c = partitionCost(m, z);
+    if (costs) costs[idx] = c;
+    if (c < best - 1e-9) { best = c; bestIdx = [idx]; } else if (Math.abs(c - best) <= 1e-9) bestIdx.push(idx);
+  }
+  const seen = new Set(), optimal = [];
+  for (const idx of bestIdx) {
+    const z = canonical(decode(idx, m.n, K)); const key = z.join("");
+    if (!seen.has(key)) { seen.add(key); optimal.push(z); }
+  }
+  return { total, costs, best, optimal };
+}
+function describe(m, z) {
+  let trafficCut = 0, riskInside = 0, rules = [], open = [];
+  for (let k = 0; k < m.A.length; k++) {
+    const cut = z[m.A[k]] !== z[m.B[k]];
+    if (cut) { trafficCut += m.T[k]; if (m.T[k] > 0) rules.push(k); } else { riskInside += m.R[k]; if (m.R[k] > 0) open.push(k); }
+  }
+  return { trafficCut, riskInside, rules, open };
+}
+function qubo2(m) {
+  const lin = new Array(m.n).fill(0), quad = []; let constant = 0;
+  for (let k = 0; k < m.A.length; k++) {
+    const i = m.A[k], j = m.B[k], w = m.R[k] - m.T[k]; constant += m.R[k];
+    if (w === 0) continue;
+    const lo = Math.min(i, j), hi = Math.max(i, j);
+    if (lo === 0) lin[hi] -= w; else { lin[lo] -= w; lin[hi] -= w; quad.push([lo, hi, 2 * w]); }
+  }
+  return { constant, lin, quad };
+}
+function ising2(m) {
+  const zz = [], zl = new Array(m.n).fill(0); let constant = 0;
+  for (let k = 0; k < m.A.length; k++) {
+    const i = m.A[k], j = m.B[k], w = m.R[k] - m.T[k]; constant += (m.R[k] + m.T[k]) / 2;
+    if (w === 0) continue;
+    const lo = Math.min(i, j), hi = Math.max(i, j);
+    if (lo === 0) zl[hi] += w / 2; else zz.push([lo, hi, w / 2]);
+  }
+  return { constant, zz, zl };
+}
+function ising3(m) {
+  const zz = [], z1 = new Map(); let constant = 0;
+  const add = (q, c) => z1.set(q, (z1.get(q) || 0) + c);
+  for (let k = 0; k < m.A.length; k++) {
+    const i = Math.min(m.A[k], m.B[k]), j = Math.max(m.A[k], m.B[k]), w = m.R[k] - m.T[k]; constant += m.T[k];
+    if (w === 0) continue;
+    if (i === 0) { add(3 * (j - 1), -w / 2); constant += w / 2; }
+    else for (let z = 0; z < 3; z++) { zz.push([3 * (i - 1) + z, 3 * (j - 1) + z, w / 4]); add(3 * (i - 1) + z, -w / 4); add(3 * (j - 1) + z, -w / 4); constant += w / 4; }
+  }
+  const zl = [...z1.entries()].filter(e => Math.abs(e[1]) > 1e-12).sort((a, b) => a[0] - b[0]);
+  return { constant, zz, zl };
+}
+function qaoaProbs(costs, nq, gammas, betas) {
+  const dim = 1 << nq, re = new Float64Array(dim).fill(1 / Math.sqrt(dim)), im = new Float64Array(dim);
+  for (let l = 0; l < gammas.length; l++) {
+    for (let b = 0; b < dim; b++) {
+      const a = -gammas[l] * costs[b], c = Math.cos(a), s = Math.sin(a), r = re[b], i = im[b];
+      re[b] = r * c - i * s; im[b] = r * s + i * c;
+    }
+    const c = Math.cos(betas[l]), s = Math.sin(betas[l]);
+    for (let k = 0; k < nq; k++) {
+      const bit = 1 << k;
+      for (let a = 0; a < dim; a++) {
+        if (a & bit) continue;
+        const d = a | bit, ar = re[a], ai = im[a], dr = re[d], di = im[d];
+        re[a] = c * ar + s * di; im[a] = c * ai - s * dr; re[d] = c * dr + s * ai; im[d] = c * di - s * ar;
+      }
+    }
+  }
+  const p = new Float64Array(dim);
+  for (let b = 0; b < dim; b++) p[b] = re[b] * re[b] + im[b] * im[b];
+  return p;
+}
+function expectedCost(costs, probs) { let e = 0; for (let b = 0; b < probs.length; b++) e += probs[b] * costs[b]; return e; }
+function nelderMead(f, x0, step, iters) {
+  const n = x0.length; let S = [x0.slice()];
+  for (let i = 0; i < n; i++) { const x = x0.slice(); x[i] += step; S.push(x); }
+  let F = S.map(f);
+  for (let it = 0; it < iters; it++) {
+    const idx = [...F.keys()].sort((a, b) => F[a] - F[b]); S = idx.map(i => S[i]); F = idx.map(i => F[i]);
+    const c = new Array(n).fill(0); for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += S[i][j] / n;
+    const xw = S[n], refl = c.map((v, j) => v + (v - xw[j])), fr = f(refl);
+    if (fr < F[0]) { const ex = c.map((v, j) => v + 2 * (v - xw[j])), fe = f(ex); if (fe < fr) { S[n] = ex; F[n] = fe; } else { S[n] = refl; F[n] = fr; } }
+    else if (fr < F[n - 1]) { S[n] = refl; F[n] = fr; }
+    else {
+      const con = c.map((v, j) => v + 0.5 * ((fr < F[n] ? refl[j] : xw[j]) - v)), fc = f(con);
+      if (fc < Math.min(fr, F[n])) { S[n] = con; F[n] = fc; } else for (let i = 1; i <= n; i++) { S[i] = S[0].map((v, j) => v + 0.5 * (S[i][j] - v)); F[i] = f(S[i]); }
+    }
+  }
+  let bi = 0; for (let i = 1; i <= n; i++) if (F[i] < F[bi]) bi = i;
+  return { x: S[bi], f: F[bi] };
+}
+function optimizeAngles(costs, nq, p, restarts) {
+  let seed = 12345; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  let best = null;
+  for (let r = 0; r < restarts; r++) {
+    const x0 = []; for (let i = 0; i < p; i++) x0.push((rnd() - 0.5) * 1.2); for (let i = 0; i < p; i++) x0.push((rnd() - 0.5) * 1.6);
+    const res = nelderMead(x => expectedCost(costs, qaoaProbs(costs, nq, x.slice(0, p), x.slice(p))), x0, 0.2, 120);
+    if (!best || res.f < best.f) best = res;
+  }
+  return { gammas: best.x.slice(0, best.x.length / 2), betas: best.x.slice(best.x.length / 2), energy: best.f };
+}
+
+function subspaceCosts(m, K) {
+  const total = Math.pow(K, m.n - 1), c = new Float64Array(total);
+  for (let idx = 0; idx < total; idx++) c[idx] = partitionCost(m, decode(idx, m.n, K));
+  return c;
+}
+function mixerMatrix(K, beta) {
+  const pairs = K === 2 ? [[0, 1]] : [...Array(K).keys()].map(a => [a, (a + 1) % K]);
+  let re = [...Array(K)].map((_, i) => [...Array(K)].map((_, j) => (i === j ? 1 : 0))), im = re.map(r => r.map(() => 0));
+  const c = Math.cos(beta), s = Math.sin(beta);
+  for (const [a, b] of pairs) {
+    const nr = re.map(r => r.slice()), ni = im.map(r => r.slice());
+    for (let j = 0; j < K; j++) {
+      nr[a][j] = c * re[a][j] + s * im[b][j]; ni[a][j] = c * im[a][j] - s * re[b][j];
+      nr[b][j] = c * re[b][j] + s * im[a][j]; ni[b][j] = c * im[b][j] - s * re[a][j];
+    }
+    re = nr; im = ni;
+  }
+  return { re, im };
+}
+function subspaceProbs(costs, n, K, gammas, betas) {
+  const dim = costs.length, re = new Float64Array(dim).fill(1 / Math.sqrt(dim)), im = new Float64Array(dim);
+  const vr = new Float64Array(K), vi = new Float64Array(K);
+  for (let l = 0; l < gammas.length; l++) {
+    for (let b = 0; b < dim; b++) {
+      const a = -gammas[l] * costs[b], c = Math.cos(a), s = Math.sin(a), r = re[b], i = im[b];
+      re[b] = r * c - i * s; im[b] = r * s + i * c;
+    }
+    const U = mixerMatrix(K, betas[l]);
+    for (let stride = 1; stride < dim; stride *= K) {
+      for (let hi = 0; hi < dim; hi += stride * K) for (let lo = 0; lo < stride; lo++) {
+        const base = hi + lo;
+        for (let d = 0; d < K; d++) { vr[d] = re[base + d * stride]; vi[d] = im[base + d * stride]; }
+        for (let d = 0; d < K; d++) {
+          let sr = 0, si = 0;
+          for (let e = 0; e < K; e++) { const ur = U.re[d][e], ui = U.im[d][e]; sr += ur * vr[e] - ui * vi[e]; si += ur * vi[e] + ui * vr[e]; }
+          re[base + d * stride] = sr; im[base + d * stride] = si;
+        }
+      }
+    }
+  }
+  const p = new Float64Array(dim);
+  for (let b = 0; b < dim; b++) p[b] = re[b] * re[b] + im[b] * im[b];
+  return p;
+}
+function localSearch(costs, idx, n, K) {
+  let cur = idx, val = costs[idx];
+  for (;;) {
+    let best = -1, bestVal = val, stride = 1;
+    for (let i = 1; i < n; i++, stride *= K) {
+      const digit = Math.floor(cur / stride) % K;
+      for (let d = 0; d < K; d++) {
+        if (d === digit) continue;
+        const cand = cur + (d - digit) * stride;
+        if (costs[cand] < bestVal - 1e-12) { bestVal = costs[cand]; best = cand; }
+      }
+    }
+    if (best < 0) return cur;
+    cur = best; val = bestVal;
+  }
+}
+
+function buildQubo(m, K) {
+  const v = K === 2 ? (i => i - 1) : ((i, k) => (i - 1) * K + k);
+  const nv = K === 2 ? m.n - 1 : (m.n - 1) * K, lin = new Float64Array(nv), quad = new Map();
+  const addQ = (a, b, c) => { const key = a < b ? a + "," + b : b + "," + a; quad.set(key, (quad.get(key) || 0) + c); };
+  let constant = 0;
+  for (let e = 0; e < m.A.length; e++) {
+    const i = Math.min(m.A[e], m.B[e]), j = Math.max(m.A[e], m.B[e]), t = m.T[e], w = m.R[e] - m.T[e];
+    constant += t;
+    if (w === 0) continue;
+    if (K === 2) {
+      if (i === 0) { constant += w; lin[v(j)] -= w; }
+      else { constant += w; lin[v(i)] -= w; lin[v(j)] -= w; addQ(v(i), v(j), 2 * w); }
+    } else {
+      if (i === 0) lin[v(j, 0)] += w;
+      else for (let k = 0; k < K; k++) addQ(v(i, k), v(j, k), w);
+    }
+  }
+  return { K, nv, constant, lin, quad };
+}
+function quboToIsing(q) {
+  const h = new Float64Array(q.nv), J = []; let constant = q.constant;
+  for (let a = 0; a < q.nv; a++) { if (q.lin[a]) { h[a] -= q.lin[a] / 2; constant += q.lin[a] / 2; } }
+  for (const [key, c] of q.quad) {
+    if (!c) continue;
+    const [a, b] = key.split(",").map(Number);
+    J.push([a, b, c / 4]); h[a] -= c / 4; h[b] -= c / 4; constant += c / 4;
+  }
+  return { K: q.K, nv: q.nv, constant, h, J };
+}
+function isingEnergies(ising, n, K) {
+  const total = Math.pow(K, n - 1), E = new Float64Array(total), Z = new Float64Array(ising.nv);
+  for (let idx = 0; idx < total; idx++) {
+    const z = decode(idx, n, K);
+    for (let i = 1; i < n; i++) {
+      if (K === 2) Z[i - 1] = z[i] === 1 ? -1 : 1;
+      else for (let k = 0; k < K; k++) Z[(i - 1) * K + k] = z[i] === k ? -1 : 1;
+    }
+    let e = ising.constant;
+    for (let a = 0; a < ising.nv; a++) e += ising.h[a] * Z[a];
+    for (const [a, b, c] of ising.J) e += c * Z[a] * Z[b];
+    E[idx] = e;
+  }
+  return E;
+}
+function runQuantumSim(m, K, shots) {
+  const t0 = performance.now();
+  const qubo = buildQubo(m, K), ising = quboToIsing(qubo), n = m.n;
+  const costs = isingEnergies(ising, n, K), direct = subspaceCosts(m, K);
+  let gap = 0; for (let i = 0; i < costs.length; i++) gap = Math.max(gap, Math.abs(costs[i] - direct[i]));
+  if (gap > 1e-6) throw new Error("Ising energy does not match the cost (gap " + gap + ")");
+  window.qsegmentLastRun = { zones: K, qubits: ising.nv, quboLinear: qubo.lin.filter(x => x).length, quboQuadratic: [...qubo.quad.values()].filter(x => x).length, isingZ: ising.h.filter(x => Math.abs(x) > 1e-12).length, isingZZ: ising.J.length, isingConstant: ising.constant, maxEnergyMinusCost: gap };
+  let mean = 0; for (const c of costs) mean += c; mean /= costs.length;
+  let sd = 0; for (const c of costs) sd += (c - mean) * (c - mean); sd = Math.sqrt(sd / costs.length) || 1;
+  const norm = Float64Array.from(costs, c => (c - mean) / sd);
+  const energy = x => expectedCost(norm, subspaceProbs(norm, n, K, [x[0]], [x[1]]));
+  let best = { x: [0, 0], f: Infinity };
+  const G = costs.length > 6000 ? 12 : 20;
+  for (let a = 0; a < G; a++) for (let b = 0; b < G; b++) {
+    const x = [-2 + 4 * a / (G - 1), -1.6 + 3.2 * b / (G - 1)], f = energy(x);
+    if (f < best.f) best = { x, f };
+  }
+  best = nelderMead(energy, best.x, 0.15, 60);
+  const probs = subspaceProbs(norm, n, K, [best.x[0]], [best.x[1]]);
+  let seed = 2026; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const cum = new Float64Array(probs.length); let acc = 0; for (let i = 0; i < probs.length; i++) { acc += probs[i]; cum[i] = acc; }
+  const counts = new Map();
+  for (let s = 0; s < shots; s++) {
+    const u = rnd() * acc; let lo = 0, hi = cum.length - 1;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < u) lo = mid + 1; else hi = mid; }
+    counts.set(lo, (counts.get(lo) || 0) + 1);
+  }
+  let bestIdx = -1, bestCost = Infinity;
+  for (const idx of counts.keys()) { const f = localSearch(costs, idx, n, K); if (costs[f] < bestCost) { bestCost = costs[f]; bestIdx = f; } }
+  return { K, bestIdx, bestCost, z: canonical(decode(bestIdx, n, K)), ms: performance.now() - t0 };
+}
+//CORE-END
+
+const TYPES = [
+  ["workstation", "Workstation", '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M9 20h6M12 16v4"/>'],
+  ["laptop", "Laptop", '<rect x="5" y="5" width="14" height="10" rx="1"/><path d="M3 19h18"/>'],
+  ["server", "Server", '<rect x="4" y="3" width="16" height="7" rx="1.2"/><rect x="4" y="13" width="16" height="7" rx="1.2"/><path d="M8 6.5h.01M8 16.5h.01M12 6.5h5M12 16.5h5"/>'],
+  ["database", "Database", '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>'],
+  ["router", "Router", '<rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M7 13V8M17 13V8M8 16h.01M12 16h.01"/>'],
+  ["switch", "Switch", '<rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01" stroke-width="3"/>'],
+  ["firewall", "Firewall", '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 9.3v5.4M9 14.7V20"/>'],
+  ["cloud", "Cloud", '<path d="M6.5 18a4 4 0 0 1-.4-7.98 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17.5 18z"/>'],
+  ["medical", "Medical", '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M5.5 11h3l1.5-3 2.5 6 1.5-3h3.5M9 20h6M12 17v3"/>'],
+  ["printer", "Printer", '<path d="M7 9V4h10v5M7 14h10v6H7z"/><rect x="4" y="9" width="16" height="8" rx="1.5"/>'],
+  ["system", "Other", '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="12" r="3"/>']
+];
+const TYPE = Object.fromEntries(TYPES.map(([id, label, paths]) => [id, { label, paths }]));
+const iconSvg = (type, extra) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra || ""}>${(TYPE[type] || TYPE.system).paths}</svg>`;
+const HOSPITAL = {
+  nodes: [["nurse", 260, 450, "workstation"], ["mri", 110, 120, "medical"], ["portal", 630, 125, "cloud"], ["email", 470, 455, "server"], ["pacs", 250, 120, "database"], ["pharm", 190, 320, "server"], ["ehr", 390, 240, "database"], ["billing", 620, 335, "server"]],
+  links: [["nurse", "ehr", 6, 7], ["nurse", "email", 3, 0], ["nurse", "pharm", 2, 0], ["nurse", "pacs", 0, 2], ["nurse", "billing", 0, 3], ["mri", "pacs", 6, 0], ["mri", "ehr", 0, 5], ["mri", "pharm", 0, 2],
+    ["mri", "billing", 0, 4], ["pacs", "ehr", 5, 0], ["portal", "ehr", 4, 6], ["portal", "billing", 3, 5], ["portal", "email", 2, 0], ["email", "ehr", 0, 3], ["email", "pharm", 0, 2], ["email", "billing", 2, 3],
+    ["pharm", "ehr", 5, 0], ["ehr", "billing", 4, 3]],
+  fits: { 1: { g: [-0.13553641165836655], b: [0.39876127558471364] }, 2: { g: [0.15342710316629551, -0.3111689889519134], b: [-0.2875350130673109, 0.2742766361878971] } }
+};
+const state = { nodes: [], links: [], K: 0, qres: null, server: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
+let nextId = 1;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const zoneVar = z => `var(--zone${ZN[z]})`;
+const fmtNum = x => (Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : x.toFixed(3).replace(/0+$/, "").replace(/\.$/, ""));
+
+function loadPreset(name) {
+  state.nodes = []; state.links = []; state.plan = null; state.selected = null; state.fits = null; nextId = 1;
+  const src = name === "hospital" ? HOSPITAL : { nodes: [], links: [] };
+  const idOf = {};
+  for (const [nm, x, y, type] of src.nodes) { const id = nextId++; idOf[nm] = id; state.nodes.push({ id, name: nm, x, y, type: type || "system" }); }
+  for (const [a, b, t, r] of src.links) state.links.push({ a: idOf[a], b: idOf[b], t, r });
+  state.fits = src.fits || null;
+  state.p = 1; state.gammas = state.fits ? state.fits[1].g.slice() : [0.1]; state.betas = state.fits ? state.fits[1].b.slice() : [0.3];
+  afterEdit();
+}
+function indexOfId(id) { return state.nodes.findIndex(n => n.id === id); }
+function model() {
+  return makeModel(state.nodes, state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })));
+}
+const limitK = () => (state.K === 3 ? 12 : 14);
+
+function afterEdit() { state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderAll(); }
+
+function runPlan() {
+  if (state.K < 2) { state.plan = null; return; }
+  const m = model();
+  if (m.n < 2) { state.plan = null; return; }
+  if (m.n > limitK()) { state.plan = { tooBig: true }; return; }
+  const t0 = performance.now(); const res = bruteForce(m, state.K); const ms = performance.now() - t0;
+  const z = res.optimal[0], d = describe(m, z);
+  state.plan = { K: state.K, z, best: res.best, optimal: res.optimal, total: res.total, ms, costs: res.costs, ...d };
+}
+
+/* ---------------- canvas ---------------- */
+const svg = $("canvas");
+function nodeWidth(n) { return Math.max(96, n.name.length * 8.6 + 30); }
+const CW = 760, CH = 520;
+function laneLayout(plan) {
+  const used = [...new Set(plan.z)].sort((a, b) => a - b), pad = 16, gap = 14, top = 54, bottom = 18;
+  const laneW = (CW - 2 * pad - (used.length - 1) * gap) / used.length, pos = new Map(), lanes = [];
+  used.forEach((zone, li) => {
+    const x0 = pad + li * (laneW + gap), mem = state.nodes.filter((_, i) => plan.z[i] === zone);
+    const cols = mem.length > 5 ? 2 : 1, rows = Math.ceil(mem.length / cols), avail = CH - top - bottom - 20;
+    const rowH = Math.min(100, avail / Math.max(rows, 1)), y0 = top + 10 + (avail - rows * rowH) / 2 + rowH / 2;
+    mem.forEach((n, j) => { const c = j % cols, r = Math.floor(j / cols); pos.set(n.id, { x: x0 + laneW * (c + 0.5) / cols, y: y0 + r * rowH }); });
+    lanes.push({ zone, x: x0, w: laneW, count: mem.length, maxNode: laneW / cols - 14 });
+  });
+  return { pos, lanes };
+}
+let tween = null;
+function startTween() {
+  const plan = state.plan; if (!plan) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  tween = { t0: performance.now(), dur: reduce ? 0 : 650 };
+  const step = () => { if (!tween) return; renderCanvas(); if (performance.now() - tween.t0 < tween.dur) requestAnimationFrame(step); else { tween = null; renderCanvas(); } };
+  requestAnimationFrame(step);
+}
+function renderCanvas() {
+  const plan = state.plan && !state.plan.tooBig && state.plan.K === state.K ? state.plan : null;
+  const zid = id => (plan ? plan.z[indexOfId(id)] : null);
+  const L = plan ? laneLayout(plan) : null;
+  let p = 1;
+  if (L && tween && tween.dur > 0) { const t = Math.min(1, (performance.now() - tween.t0) / tween.dur); p = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  const at = n => { if (!L) return { x: n.x, y: n.y }; const q = L.pos.get(n.id); return { x: n.x + (q.x - n.x) * p, y: n.y + (q.y - n.y) * p }; };
+  const P = new Map(state.nodes.map(n => [n.id, at(n)]));
+  const laneOf = new Map(L ? L.lanes.map(l => [l.zone, l]) : []);
+  let out = "";
+  if (L) L.lanes.forEach(l => {
+    const zc = zoneVar(l.zone);
+    out += `<g opacity="${p}" style="pointer-events:none"><rect x="${l.x}" y="12" width="${l.w}" height="${CH - 24}" rx="16" fill="${zc}" fill-opacity="0.07" stroke="${zc}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="7 6"/>
+      <text x="${l.x + 16}" y="40" font-family="var(--display)" font-size="16" font-weight="700" fill="${zc}">Zone ${ZN[l.zone]}<tspan fill="var(--muted)" font-weight="500" font-size="13"> · ${l.count} system${l.count > 1 ? "s" : ""}</tspan></text></g>`;
+  });
+  state.links.forEach((l, k) => {
+    const a = P.get(l.a), b = P.get(l.b);
+    const sel = state.selected && state.selected.type === "link" && state.selected.k === k;
+    const cut = plan ? zid(l.a) !== zid(l.b) : null;
+    let col = "var(--wire)", width = 2.5, op = 1;
+    if (cut !== null) {
+      if (l.t === 0 && l.r === 0) op = 0.3;
+      else { col = cut ? "var(--bad)" : "var(--good)"; width = cut ? 2.2 : 3.2; op = cut ? 0.78 : 1; }
+    }
+    if (sel) out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--accent)" stroke-opacity="0.32" stroke-width="${width + 8}" stroke-linecap="round" style="pointer-events:none"/>`;
+    out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${col}" stroke-width="${width}" stroke-linecap="round" opacity="${op}"/>`;
+    if (sel) {
+      const label = `traffic ${l.t} · risk ${l.r}`, lw = label.length * 6.8 + 20, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      out += `<g style="pointer-events:none"><rect x="${mx - lw / 2}" y="${my - 13}" width="${lw}" height="26" rx="13" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/><text x="${mx}" y="${my + 4.5}" text-anchor="middle" font-family="var(--display)" font-size="12.5" font-weight="600" fill="var(--fg)">${label}</text></g>`;
+    }
+    out += `<line class="hit" data-link="${k}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--accent)" stroke-opacity="0" stroke-width="18" stroke-linecap="round" style="cursor:pointer"/>`;
+  });
+  state.nodes.forEach(n => {
+    const q = P.get(n.id), zi = zid(n.id), sel = state.selected && state.selected.type === "node" && state.selected.id === n.id;
+    const lane = zi === null ? null : laneOf.get(zi);
+    const w = lane ? Math.min(nodeWidth(n), lane.maxNode) : nodeWidth(n), h = 64;
+    const zc = zi === null ? null : zoneVar(zi);
+    const stroke = sel ? "var(--accent)" : zc || "var(--wire)", sw = sel ? 2.5 : zc ? 2 : 1.5;
+    const ic = zc || "var(--muted)";
+    out += `<g class="nodeg" data-node="${n.id}" style="cursor:${plan ? "pointer" : "grab"}">
+      <rect x="${q.x - w / 2}" y="${q.y - h / 2}" width="${w}" height="${h}" rx="12" fill="var(--raised)" stroke="${stroke}" stroke-width="${sw}"/>
+      ${zc ? `<rect x="${q.x - w / 2}" y="${q.y - h / 2}" width="${w}" height="${h}" rx="12" fill="${zc}" fill-opacity="0.12" style="pointer-events:none"/>` : ""}
+      <g transform="translate(${q.x - 12} ${q.y - 26})" style="pointer-events:none;color:${ic}">${iconSvg(n.type, 'width="24" height="24"')}</g>
+      <text x="${q.x}" y="${q.y + 20}" text-anchor="middle" font-size="14" font-weight="600" fill="var(--fg)" style="pointer-events:none;user-select:none">${esc(n.name)}</text>
+      ${plan ? "" : `<g class="port" data-port="${n.id}" style="cursor:crosshair"><circle cx="${q.x + w / 2}" cy="${q.y}" r="14" fill="transparent"/><circle class="dot" cx="${q.x + w / 2}" cy="${q.y}" r="6.5" fill="var(--accent)" stroke="var(--canvas)" stroke-width="2.5"/></g>`}</g>`;
+  });
+  if (!state.nodes.length) out += `<text x="${CW / 2}" y="${CH / 2}" text-anchor="middle" fill="var(--muted)" font-size="15">Empty canvas. Drag an icon from the toolbox onto it, or press Load Template.</text>`;
+  svg.innerHTML = out;
+  const item = (col, label) => `<span><i style="border-color:${col}"></i>${label}</span>`;
+  $("legend").innerHTML = plan ? item("var(--bad)", "red: crosses zones, needs a firewall rule") + item("var(--good)", "green: stays inside a zone") + `<span class="grow"></span><button type="button" class="btn ghost small" id="backEdit">Back to editing</button>` : "";
+  const be = $("backEdit"); if (be) be.onclick = () => { state.plan = null; state.qres = null; state.K = 0; state.selected = null; renderAll(); };
+}
+function svgPoint(ev) {
+  const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y };
+}
+let drag = null, connect = null;
+svg.addEventListener("pointerdown", ev => {
+  const portEl = ev.target.closest("[data-port]"), nodeEl = ev.target.closest("[data-node]"), linkEl = ev.target.closest("[data-link]");
+  if (portEl) {
+    const id = +portEl.dataset.port, n = state.nodes[indexOfId(id)];
+    connect = { from: id, x: n.x, y: n.y };
+    svg.setPointerCapture(ev.pointerId); state.selected = { type: "node", id }; renderAll(); return;
+  }
+  if (nodeEl && state.plan) { state.selected = { type: "node", id: +nodeEl.dataset.node }; renderAll(); return; }
+  if (nodeEl) {
+    const id = +nodeEl.dataset.node;
+    const n = state.nodes[indexOfId(id)], p = svgPoint(ev);
+    drag = { id, dx: n.x - p.x, dy: n.y - p.y, moved: false };
+    svg.setPointerCapture(ev.pointerId); state.selected = { type: "node", id }; renderAll();
+  } else if (linkEl) {
+    state.selected = { type: "link", k: +linkEl.dataset.link }; renderAll();
+  } else { state.selected = null; renderAll(); }
+});
+svg.addEventListener("pointermove", ev => {
+  if (connect) {
+    const p = svgPoint(ev);
+    let r = $("rubber");
+    if (!r) { svg.insertAdjacentHTML("beforeend", `<line id="rubber" stroke="var(--accent)" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" style="pointer-events:none"/>`); r = $("rubber"); }
+    r.setAttribute("x1", connect.x); r.setAttribute("y1", connect.y); r.setAttribute("x2", p.x); r.setAttribute("y2", p.y);
+    return;
+  }
+  if (!drag) return;
+  const n = state.nodes[indexOfId(drag.id)], p = svgPoint(ev);
+  n.x = Math.max(40, Math.min(720, p.x + drag.dx)); n.y = Math.max(34, Math.min(484, p.y + drag.dy)); drag.moved = true; renderCanvas();
+});
+svg.addEventListener("pointerup", ev => {
+  if (connect) {
+    const from = connect.from; connect = null;
+    const r = $("rubber"); if (r) r.remove();
+    const hit = document.elementsFromPoint(ev.clientX, ev.clientY).map(e => e.closest && e.closest("[data-node]")).find(Boolean);
+    const to = hit ? +hit.dataset.node : null;
+    if (to !== null && to !== from) {
+      let k = state.links.findIndex(l => (l.a === from && l.b === to) || (l.a === to && l.b === from));
+      if (k < 0) { state.links.push({ a: from, b: to, t: 0, r: 0 }); k = state.links.length - 1; }
+      state.selected = { type: "link", k }; afterEdit();
+    } else renderAll();
+    return;
+  }
+  drag = null;
+});
+
+/* ---------------- editor under the canvas ---------------- */
+function renderEditor() {
+  const el = $("editor"), s = state.selected;
+  if (!s && state.plan) { el.innerHTML = `<span class="hintbox">Showing the quantum result: each column is one zone. Click a link to see its numbers, or press <b>Back to editing</b> to change the network.</span>`; return; }
+  if (!s) { el.innerHTML = `<span class="hintbox">Drag a system to move it. To link two systems, drag from the teal dot on one onto the other. Click a link to set its <b>traffic</b> (how much the business needs it) and <b>risk</b> (damage that could spread if both sit in one zone).</span>`; return; }
+  if (s.type === "node") {
+    const n = state.nodes[indexOfId(s.id)];
+    el.innerHTML = `<span class="chip">${iconSvg(n.type)}System</span><label class="field"><span class="fhead">Name</span><input class="input" type="text" id="nameInput" value="${esc(n.name)}" maxlength="14"></label><label class="field"><span class="fhead">Type</span><select id="typeSel" class="input">${TYPES.map(([id, label]) => `<option value="${id}"${id === n.type ? " selected" : ""}>${label}</option>`).join("")}</select></label><span class="grow"></span><button type="button" class="btn danger" id="delNode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>Delete system</button>`;
+    $("typeSel").addEventListener("change", e => { n.type = e.target.value; renderCanvas(); });
+    $("nameInput").addEventListener("change", e => { if (state.nodes.some(o => o.id !== n.id && o.name === n.name)) { n.name = (n.name + " " + n.id).slice(0, 14); e.target.value = n.name; renderCanvas(); renderPanels(); } });
+    $("nameInput").addEventListener("input", e => { n.name = e.target.value.trim() || "?"; renderCanvas(); renderPanels(); });
+    $("delNode").addEventListener("click", () => {
+      state.links = state.links.filter(l => l.a !== n.id && l.b !== n.id); state.nodes = state.nodes.filter(x => x.id !== n.id); state.selected = null; afterEdit();
+    });
+  } else {
+    const l = state.links[s.k]; if (!l) { state.selected = null; return renderEditor(); }
+    const a = state.nodes[indexOfId(l.a)], b = state.nodes[indexOfId(l.b)];
+    el.innerHTML = `<span class="pair"><span class="chip">${iconSvg(a.type)}${esc(a.name)}</span><span class="arrow">↔</span><span class="chip">${iconSvg(b.type)}${esc(b.name)}</span></span>
+      <label class="field"><span class="fhead">Traffic <b id="tVal">${l.t}</b></span><input type="range" class="rng-traffic" id="tIn" min="0" max="10" step="1" value="${l.t}"><small>how much the business needs them to talk</small></label>
+      <label class="field"><span class="fhead">Risk <b id="rVal">${l.r}</b></span><input type="range" class="rng-risk" id="rIn" min="0" max="10" step="1" value="${l.r}"><small>damage that could spread if they share a zone</small></label>
+      <span class="grow"></span><button type="button" class="btn danger" id="delLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>Delete link</button>`;
+    $("tIn").addEventListener("input", e => { l.t = +e.target.value; $("tVal").textContent = l.t; afterEditKeep(); });
+    $("rIn").addEventListener("input", e => { l.r = +e.target.value; $("rVal").textContent = l.r; afterEditKeep(); });
+    $("delLink").addEventListener("click", () => { state.links.splice(s.k, 1); state.selected = null; afterEdit(); });
+  }
+}
+function paintRanges() {
+  document.querySelectorAll('input[type="range"]').forEach(r => {
+    const lo = +r.min || 0, hi = +r.max || 100;
+    r.style.setProperty("--p", ((+r.value - lo) / (hi - lo)) * 100 + "%");
+  });
+}
+document.addEventListener("input", ev => { if (ev.target.type === "range") paintRanges(); });
+function afterEditKeep() { state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderCanvas(); renderPanels(); }
+
+/* ---------------- panels ---------------- */
+function pairRows(m, idxs) {
+  if (!idxs.length) return `<p class="muted">none</p>`;
+  return `<div class="plist">${idxs.map(k => `<div class="prow"><span class="pnames">${esc(m.names[m.A[k]])}<span class="sep">–</span>${esc(m.names[m.B[k]])}</span><span class="pnums"><span class="num t${m.T[k] ? "" : " zero"}">traffic ${m.T[k]}</span><span class="num r${m.R[k] ? "" : " zero"}">risk ${m.R[k]}</span></span></div>`).join("")}</div>`;
+}
+function renderResult() {
+  const el = $("tab-result"), m = model(), plan = state.plan;
+  if (m.n < 2) { el.innerHTML = `<p class="muted">Add at least two systems.</p>`; return; }
+  if (state.K === 0) {
+    el.innerHTML = `<div class="empty"><div class="big">No zones yet</div><p class="note">Flat network: every system can reach every other. Press <b>Run quantum</b> to split it into zones.</p></div>`;
+    return;
+  }
+  if (m.n > limitK()) { el.innerHTML = `<p class="warn">${m.n} systems is more than the exact search in this page handles for ${state.K} zones (limit ${limitK()}).</p>`; return; }
+  if (!plan || plan.K !== state.K) { el.innerHTML = `<p class="muted">Press <b>Run quantum</b>.</p>`; return; }
+  const zonesHtml = [...Array(state.K).keys()].map(k => {
+    const mem = state.nodes.filter((_, i) => plan.z[i] === k);
+    return mem.length ? `<div class="zcard" style="--zc:${zoneVar(k)}"><h4>Zone ${ZN[k]}<span class="muted">${mem.length} system${mem.length > 1 ? "s" : ""}</span></h4><div class="zchips">${mem.map(n => `<span class="chip">${iconSvg(n.type)}${esc(n.name)}</span>`).join("")}</div></div>` : "";
+  }).join("");
+  const used = new Set(plan.z).size;
+  const fewer = used < plan.K ? `<p class="note zonenote">The best plan here uses only ${used} of the ${plan.K} zones. Another zone would add more firewall rules for busy links than the risk it removes.</p>` : "";
+  el.innerHTML = `
+    ${fewer}${zonesHtml}
+    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>` : ""}</div>
+    <details class="more"><summary>Details</summary>
+      <h3>Firewall rules to create <span class="badge bad">${plan.rules.length}</span></h3>${pairRows(m, plan.rules)}
+      <h3>Risk still open inside zones <span class="badge warn">${plan.open.length}</span></h3>${pairRows(m, plan.open)}
+    </details>`;
+}
+function toJson() {
+  return { version: 1, zones: state.K, systems: state.nodes.map(n => ({ name: n.name, type: n.type, x: Math.round(n.x), y: Math.round(n.y) })),
+    links: state.links.map(l => ({ a: state.nodes[indexOfId(l.a)].name, b: state.nodes[indexOfId(l.b)].name, traffic: l.t, risk: l.r })) };
+}
+function fromJson(j) {
+  if (!j || !Array.isArray(j.systems) || !Array.isArray(j.links)) throw new Error("bad");
+  const nodes = [], idOf = {}; nextId = 1;
+  for (const s of j.systems) { const id = nextId++; idOf[s.name] = id; nodes.push({ id, name: String(s.name), type: TYPE[s.type] ? s.type : "system", x: +s.x || 100, y: +s.y || 100 }); }
+  const links = j.links.map(l => ({ a: idOf[l.a], b: idOf[l.b], t: +l.traffic || 0, r: +l.risk || 0 }));
+  if (links.some(l => !l.a || !l.b)) throw new Error("bad");
+  state.nodes = nodes; state.links = links; state.K = j.zones === 3 ? 3 : j.zones === 2 ? 2 : 0; state.selected = null; state.fits = null; syncK(); afterEdit();
+}
+function syncK() {}
+
+function renderQuantum() { const el = $("qOut"); if (el) el.innerHTML = ""; }
+function renderPanels() { renderResult(); renderQuantum(); paintRanges(); syncQuantum(); }
+function renderAll() { renderCanvas(); renderEditor(); renderPanels(); paintRanges(); }
+
+
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>';
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  const b = $("themeBtn"), next = t === "dark" ? "light" : "dark";
+  b.innerHTML = t === "dark" ? SUN : MOON; b.setAttribute("aria-label", `Switch to ${next} mode`); b.title = `Switch to ${next} mode`;
+}
+let theme = "dark";
+try { theme = localStorage.getItem("qsegment-theme") || "dark"; } catch (e) {}
+applyTheme(theme);
+$("themeBtn").addEventListener("click", () => {
+  theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  applyTheme(theme);
+  try { localStorage.setItem("qsegment-theme", theme); } catch (e) {}
+});
+$("template").addEventListener("click", () => loadPreset("hospital"));
+$("clear").addEventListener("click", () => { state.K = 0; syncK(); loadPreset("blank"); });
+function addNodeOfType(type, x, y) {
+  const id = nextId++, k = state.nodes.length, base = TYPE[type].label.split(" ")[0];
+  let nm = base, c = 1;
+  while (state.nodes.some(o => o.name === nm)) nm = (base + " " + ++c).slice(0, 14);
+  const px = x === undefined ? 130 + (k * 97) % 520 : x, py = y === undefined ? 90 + (k * 71) % 360 : y;
+  state.nodes.push({ id, name: nm, type, x: Math.max(50, Math.min(710, px)), y: Math.max(34, Math.min(484, py)) });
+  state.selected = { type: "node", id }; afterEdit();
+}
+$("toolbox").innerHTML = `<p class="hint">Drag an icon onto the canvas, or click it.</p>` + TYPES.map(([id, label]) => `<button type="button" class="tool" draggable="true" data-type="${id}" title="${label}">${iconSvg(id)}<span>${label}</span></button>`).join("");
+$("toolbox").addEventListener("click", ev => { const t = ev.target.closest("[data-type]"); if (t) addNodeOfType(t.dataset.type); });
+$("toolbox").addEventListener("dragstart", ev => { const t = ev.target.closest("[data-type]"); if (t) { ev.dataTransfer.setData("text/plain", t.dataset.type); ev.dataTransfer.effectAllowed = "copy"; } });
+svg.addEventListener("dragover", ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; });
+svg.addEventListener("drop", ev => {
+  ev.preventDefault();
+  const type = ev.dataTransfer.getData("text/plain");
+  if (!TYPE[type]) return;
+  const p = svgPoint(ev); addNodeOfType(type, p.x, p.y);
+});
+loadPreset("blank");
+
+const QLIMIT = 20000;
+function syncQuantum() {
+  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value;
+  const size = Math.pow(K, Math.max(n - 1, 0));
+  const ok = n >= 2 && size <= QLIMIT && $("qMode").value === "sim";
+  b.disabled = !ok;
+  b.title = n < 2 ? "Add at least two systems." : size > QLIMIT ? "Too many systems for the simulator in this page." : "Run the quantum circuit on the simulator.";
+}
+$("runQuantum").addEventListener("click", () => {
+  const b = $("runQuantum"); if (b.disabled) return;
+  if ($("qMode").value !== "sim") return;
+  b.disabled = true; b.innerHTML = `<span class="spin"></span> Running…`;
+  state.qres = null; state.plan = null; state.K = 0; renderCanvas();
+  $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span>Running the quantum circuit…</div>`;
+  const shown = performance.now(), m = model(), K = +$("qK").value;
+  const pack = q => ({ q, K, plan: { K, z: q.z, best: q.exactBest, optimal: [], total: Math.pow(K, m.n - 1), ms: q.ms, costs: null, ...describe(m, q.z) } });
+  const local = () => { try { const q = runQuantumSim(m, K, 1024); q.exactBest = bruteForce(m, K).best; q.engine = "browser"; return pack(q); } catch (err) { console.error(err); return null; } };
+  const finish = done => setTimeout(() => {
+    if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; }
+    b.textContent = "Run quantum"; renderAll(); if (done) startTween();
+  }, Math.max(0, 900 - (performance.now() - shown)));
+  if (!state.server) { setTimeout(() => finish(local()), 40); return; }
+  const body = { zones: K, backend: "simulator", nodes: state.nodes.map(n => ({ name: n.name })), links: state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })) };
+  fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("server answered " + r.status)))
+    .then(j => { window.qsegmentLastRun = j; finish(pack({ K, z: j.zones, bestCost: j.cost, exactBest: j.best_possible, ms: j.compute_ms, engine: j.engine })); })
+    .catch(err => { console.warn("Server run failed, using the in-browser simulator instead.", err); finish(local()); });
+});
+(async () => {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 1500);
+    const r = await fetch("/api/health", { cache: "no-store", signal: ctl.signal }); clearTimeout(timer);
+    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); }
+  } catch (e) { state.server = false; }
+})();
+$("qMode").addEventListener("change", syncQuantum);
+$("qK").addEventListener("change", () => { state.qres = null; state.plan = null; state.K = 0; renderAll(); });
+syncK();
+</script>
+
+</body>
+</html>
