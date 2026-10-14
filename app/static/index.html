@@ -181,6 +181,10 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
   .app { padding-inline: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .tool, .btn, .port .dot { transition: none; } .spin { animation-duration: 2s; } }
+.qinput { flex: 1; min-width: 0; width: auto; }
+.qibmnote { margin: 0 0 10px; font-size: 0.8rem; }
+.loading .msg { min-height: 1.4em; }
+.jobline { margin: 8px 0 0; font-size: 0.76rem; color: var(--muted); font-family: var(--mono); word-break: break-all; }
 </style>
 
 <div class="app">
@@ -201,8 +205,8 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
     </section>
 
     <div class="rightcol">
-      <section class="card qcard" aria-label="Quantum run">
-        <div class="qhead"><h3>Quantum run</h3></div>
+      <section class="card qcard" aria-label="Quantum solver">
+        <div class="qhead"><h3>Quantum solver</h3></div>
         <div class="qrow">
           <label for="qK">Zones</label>
           <select id="qK" class="qsel">
@@ -214,10 +218,15 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
           <label for="qMode">Run on</label>
           <select id="qMode" class="qsel">
             <option value="sim" selected>Quantum simulator</option>
-            <option value="ibm" disabled>Real IBM chip (presenter only)</option>
+            <option value="ibm">Real IBM quantum chip</option>
           </select>
         </div>
-        <button type="button" class="btn primary qgo" id="runQuantum" disabled>Run quantum</button>
+        <div class="qrow" id="qCodeRow" hidden>
+          <label for="qCode">Code</label>
+          <input id="qCode" class="input qinput" type="password" autocomplete="off" spellcheck="false" placeholder="Q-Segment access code">
+        </div>
+        <p class="note qibmnote" id="qIbmNote" hidden></p>
+        <button type="button" class="btn primary qgo" id="runQuantum" disabled>Segment my network</button>
         <div id="qOut"></div>
       </section>
       <aside class="card" aria-label="Zone plan"><div id="tab-result"></div></aside>
@@ -513,7 +522,7 @@ const HOSPITAL = {
     ["pharm", "ehr", 5, 0], ["ehr", "billing", 4, 3]],
   fits: { 1: { g: [-0.13553641165836655], b: [0.39876127558471364] }, 2: { g: [0.15342710316629551, -0.3111689889519134], b: [-0.2875350130673109, 0.2742766361878971] } }
 };
-const state = { nodes: [], links: [], K: 0, qres: null, server: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
+const state = { nodes: [], links: [], K: 0, qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
 let nextId = 1;
 
 const $ = id => document.getElementById(id);
@@ -719,11 +728,11 @@ function renderResult() {
   const el = $("tab-result"), m = model(), plan = state.plan;
   if (m.n < 2) { el.innerHTML = `<p class="muted">Add at least two systems.</p>`; return; }
   if (state.K === 0) {
-    el.innerHTML = `<div class="empty"><div class="big">No zones yet</div><p class="note">Flat network: every system can reach every other. Press <b>Run quantum</b> to split it into zones.</p></div>`;
+    el.innerHTML = `<div class="empty"><div class="big">No zones yet</div><p class="note">Flat network: every system can reach every other. Press <b>Segment my network</b> to split it into zones.</p></div>`;
     return;
   }
   if (m.n > limitK()) { el.innerHTML = `<p class="warn">${m.n} systems is more than the exact search in this page handles for ${state.K} zones (limit ${limitK()}).</p>`; return; }
-  if (!plan || plan.K !== state.K) { el.innerHTML = `<p class="muted">Press <b>Run quantum</b>.</p>`; return; }
+  if (!plan || plan.K !== state.K) { el.innerHTML = `<p class="muted">Press <b>Segment my network</b>.</p>`; return; }
   const zonesHtml = [...Array(state.K).keys()].map(k => {
     const mem = state.nodes.filter((_, i) => plan.z[i] === k);
     return mem.length ? `<div class="zcard" style="--zc:${zoneVar(k)}"><h4>Zone ${ZN[k]}<span class="muted">${mem.length} system${mem.length > 1 ? "s" : ""}</span></h4><div class="zchips">${mem.map(n => `<span class="chip">${iconSvg(n.type)}${esc(n.name)}</span>`).join("")}</div></div>` : "";
@@ -732,7 +741,7 @@ function renderResult() {
   const fewer = used < plan.K ? `<p class="note zonenote">The best plan here uses only ${used} of the ${plan.K} zones. Another zone would add more firewall rules for busy links than the risk it removes.</p>` : "";
   el.innerHTML = `
     ${fewer}${zonesHtml}
-    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>` : ""}</div>
+    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? (state.qres.engine === "ibm" ? `<div class="kpi"><b>${state.qres.chip != null ? state.qres.chip.toFixed(0) + " s" : "—"}</b><span>time on the IBM chip</span></div>` : `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>`) : ""}</div>${state.qres && state.qres.engine === "ibm" ? `<p class="jobline">IBM job ${esc(state.qres.jobId || "")} on ${esc(state.qres.backend || "")}</p>` : ""}
     <details class="more"><summary>Details</summary>
       <h3>Firewall rules to create <span class="badge bad">${plan.rules.length}</span></h3>${pairRows(m, plan.rules)}
       <h3>Risk still open inside zones <span class="badge warn">${plan.open.length}</span></h3>${pairRows(m, plan.open)}
@@ -792,46 +801,68 @@ svg.addEventListener("drop", ev => {
   if (!TYPE[type]) return;
   const p = svgPoint(ev); addNodeOfType(type, p.x, p.y);
 });
-loadPreset("blank");
 
 const QLIMIT = 20000;
+const RUN_LABEL = "Segment my network";
 function syncQuantum() {
-  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value;
-  const size = Math.pow(K, Math.max(n - 1, 0));
-  const ok = n >= 2 && size <= QLIMIT && $("qMode").value === "sim";
-  b.disabled = !ok;
-  b.title = n < 2 ? "Add at least two systems." : size > QLIMIT ? "Too many systems for the simulator in this page." : "Run the quantum circuit on the simulator.";
+  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value === "ibm";
+  const size = Math.pow(K, Math.max(n - 1, 0)), note = $("qIbmNote");
+  $("qCodeRow").hidden = !ibm; note.hidden = !ibm;
+  if (ibm) note.textContent = !state.server ? "Real chip runs work only on the live site." : !state.ibm ? "Real chip runs are not switched on for this site yet." : "Runs on IBM's ibm_kingston chip. Waiting in IBM's queue can take a while.";
+  const ready = !ibm || (state.server && state.ibm && $("qCode").value.trim().length > 0);
+  if (b.querySelector(".spin")) return;
+  b.disabled = !(n >= 2 && size <= QLIMIT && ready);
+  b.title = n < 2 ? "Add at least two systems." : size > QLIMIT ? "Too many systems for this demo." : !ready ? (ibm && state.ibm ? "Enter the access code first." : "Real chip runs are not available here.") : ibm ? "Send the circuit to the real IBM chip." : "Run the quantum circuit on the simulator.";
 }
 $("runQuantum").addEventListener("click", () => {
   const b = $("runQuantum"); if (b.disabled) return;
-  if ($("qMode").value !== "sim") return;
+  const ibm = $("qMode").value === "ibm";
   b.disabled = true; b.innerHTML = `<span class="spin"></span> Running…`;
   state.qres = null; state.plan = null; state.K = 0; renderCanvas();
-  $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span>Running the quantum circuit…</div>`;
+  $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span><span class="msg">${ibm ? "Building the circuit…" : "Running the quantum circuit…"}</span></div>`;
   const shown = performance.now(), m = model(), K = +$("qK").value;
+  const msg = t => { const el = document.querySelector("#tab-result .loading .msg"); if (el) el.textContent = t; };
   const pack = q => ({ q, K, plan: { K, z: q.z, best: q.exactBest, optimal: [], total: Math.pow(K, m.n - 1), ms: q.ms, costs: null, ...describe(m, q.z) } });
   const local = () => { try { const q = runQuantumSim(m, K, 1024); q.exactBest = bruteForce(m, K).best; q.engine = "browser"; return pack(q); } catch (err) { console.error(err); return null; } };
   const finish = done => setTimeout(() => {
     if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; }
-    b.textContent = "Run quantum"; renderAll(); if (done) startTween();
+    b.textContent = RUN_LABEL; renderAll(); if (done) startTween();
   }, Math.max(0, 900 - (performance.now() - shown)));
+  const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">The chip run did not finish</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
+  const body = { zones: K, backend: ibm ? "ibm" : "simulator", nodes: state.nodes.map(n => ({ name: n.name })), links: state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })) };
+  if (ibm) {
+    body.access_code = $("qCode").value.trim();
+    const steps = { preparing: "Building the circuit…", queued: "Waiting in IBM's queue…", reading: "Reading the chip's answers…" };
+    const poll = id => fetch(`/api/job/${id}`, { cache: "no-store" }).then(r => r.json()).then(j => {
+      if (j.status === "done") { const r = j.result; window.qsegmentLastRun = r; finish(pack({ K, z: r.zones, bestCost: r.cost, exactBest: r.best_possible, ms: r.compute_ms, engine: "ibm", chip: r.chip_seconds, jobId: r.ibm_job_id, backend: r.backend })); }
+      else if (j.status === "error") fail(j.error || "Something went wrong on the server.");
+      else { msg(j.status === "running" ? `Running on ${j.backend || "the IBM chip"}…` : steps[j.status] || "Working…"); setTimeout(() => poll(id), 2500); }
+    }).catch(() => setTimeout(() => poll(id), 4000));
+    fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(r => r.json().then(j => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => { if (!ok) return fail(j.detail || "The server refused the run."); msg("Sending the circuit to IBM…"); poll(j.job_id); })
+      .catch(() => fail("Could not reach the server."));
+    return;
+  }
   if (!state.server) { setTimeout(() => finish(local()), 40); return; }
-  const body = { zones: K, backend: "simulator", nodes: state.nodes.map(n => ({ name: n.name })), links: state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })) };
   fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
     .then(r => r.ok ? r.json() : Promise.reject(new Error("server answered " + r.status)))
     .then(j => { window.qsegmentLastRun = j; finish(pack({ K, z: j.zones, bestCost: j.cost, exactBest: j.best_possible, ms: j.compute_ms, engine: j.engine })); })
     .catch(err => { console.warn("Server run failed, using the in-browser simulator instead.", err); finish(local()); });
 });
+$("qCode").addEventListener("input", syncQuantum);
 (async () => {
   if (!/^https?:$/.test(location.protocol)) return;
   try {
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 1500);
     const r = await fetch("/api/health", { cache: "no-store", signal: ctl.signal }); clearTimeout(timer);
-    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); }
+    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); }
   } catch (e) { state.server = false; }
+  syncQuantum();
 })();
 $("qMode").addEventListener("change", syncQuantum);
 $("qK").addEventListener("change", () => { state.qres = null; state.plan = null; state.K = 0; renderAll(); });
+loadPreset("hospital");
 syncK();
 </script>
 

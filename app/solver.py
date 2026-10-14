@@ -182,7 +182,8 @@ def canonical(z):
     return [seen.setdefault(v, len(seen)) for v in z]
 
 
-def run(payload):
+def prepare(payload):
+    """Everything both backends share: QUBO, Qiskit Ising operator, the QAOA circuit and tuned angles."""
     t0 = time.perf_counter()
     K = int(payload.get("zones", 3))
     if K not in (2, 3):
@@ -190,7 +191,7 @@ def run(payload):
     names, links = parse_network(payload)
     n = len(names)
     if K ** (n - 1) > MAX_STATES:
-        raise NetworkError("Too many systems for the simulator on this server.")
+        raise NetworkError("Too many systems for this demo.")
     constant, lin, quad = build_qubo(n, links, K)
     op, const = qubo_to_ising(constant, lin, quad)
     zones = splits(n, K)
@@ -199,23 +200,60 @@ def run(payload):
     if gap > 1e-6:
         raise RuntimeError(f"Ising energy does not match the cost (gap {gap}).")
     circuit = qaoa_circuit(n, K, op)
-    logical = transpile(circuit, basis_gates=["cx", "rz", "sx", "x"], optimization_level=1, seed_transpiler=7)
-    two_qubit = int(logical.count_ops().get("cx", 0))
     sd = float(np.std(E)) or 1.0
     norm = (E - E.mean()) / sd
     energy = lambda x: float(evolve(norm, n, K, x[0], x[1]) @ norm)
     grid = [(g, b) for g in np.linspace(-2, 2, 20) for b in np.linspace(-1.6, 1.6, 20)]
-    start = min(grid, key=energy)
-    res = minimize(energy, start, method="Nelder-Mead", options={"maxiter": 120, "xatol": 1e-4, "fatol": 1e-6})
-    probs = evolve(norm, n, K, res.x[0], res.x[1])
+    res = minimize(energy, min(grid, key=energy), method="Nelder-Mead", options={"maxiter": 120, "xatol": 1e-4, "fatol": 1e-6})
+    gamma, beta = float(res.x[0]), float(res.x[1])
+    bound = circuit.assign_parameters({p: (gamma / sd if p.name == "γ" else beta) for p in circuit.parameters})
+    return {"t0": t0, "K": K, "n": n, "links": links, "op": op, "const": const, "zones": zones, "direct": direct,
+            "norm": norm, "gamma": gamma, "beta": beta, "circuit": circuit, "bound": bound}
+
+
+def summary(prep, best_idx, extra):
+    op, direct = prep["op"], prep["direct"]
+    return {
+        "qiskit": qiskit.__version__, "zones_requested": prep["K"], "zones": canonical(prep["zones"][best_idx].tolist()),
+        "cost": float(direct[best_idx]), "best_possible": float(direct.min()), "qubits": op.num_qubits,
+        "ising_z_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "Z"),
+        "ising_zz_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "ZZ"), "ising_constant": float(prep["const"]),
+        "compute_ms": round((time.perf_counter() - prep["t0"]) * 1000, 1), **extra,
+    }
+
+
+def best_after_cleanup(prep, indices):
+    finals = [local_search(prep["direct"], int(i), prep["n"], prep["K"]) for i in indices]
+    return min(finals, key=lambda i: prep["direct"][i])
+
+
+def counts_to_indices(counts, prep):
+    """Turn chip readouts into valid splits. Returns ({split index: count}, share of valid readouts)."""
+    n, K, nv = prep["n"], prep["K"], prep["op"].num_qubits
+    out, total, valid = {}, 0, 0
+    for bits, c in counts.items():
+        bits = bits.replace(" ", ""); total += c
+        bit = lambda q: bits[len(bits) - 1 - q] == "1"
+        idx, ok = 0, True
+        for i in range(1, n):
+            if K == 2:
+                z = 1 if bit(variable(i, 0, K)) else 0
+            else:
+                hot = [k for k in range(K) if bit(variable(i, k, K))]
+                if len(hot) != 1:
+                    ok = False; break
+                z = hot[0]
+            idx += z * K ** (i - 1)
+        if ok:
+            out[idx] = out.get(idx, 0) + c; valid += c
+    return out, (valid / total if total else 0.0)
+
+
+def run(payload):
+    prep = prepare(payload)
+    logical = transpile(prep["circuit"], basis_gates=["cx", "rz", "sx", "x"], optimization_level=1, seed_transpiler=7)
+    probs = evolve(prep["norm"], prep["n"], prep["K"], prep["gamma"], prep["beta"])
     rng = np.random.default_rng(2026)
     samples = np.unique(rng.choice(len(probs), size=SHOTS, p=probs / probs.sum()))
-    finals = [local_search(direct, int(s), n, K) for s in samples]
-    best_idx = min(finals, key=lambda i: direct[i])
-    return {
-        "engine": "qiskit-simulator", "qiskit": qiskit.__version__, "zones_requested": K,
-        "zones": canonical(zones[best_idx].tolist()), "cost": float(direct[best_idx]), "best_possible": float(direct.min()),
-        "qubits": op.num_qubits, "ising_z_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "Z"),
-        "ising_zz_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "ZZ"), "ising_constant": float(const),
-        "two_qubit_gates_logical": two_qubit, "shots": SHOTS, "compute_ms": round((time.perf_counter() - t0) * 1000, 1),
-    }
+    best_idx = best_after_cleanup(prep, samples)
+    return summary(prep, best_idx, {"engine": "qiskit-simulator", "two_qubit_gates_logical": int(logical.count_ops().get("cx", 0)), "shots": SHOTS})
