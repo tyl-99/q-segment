@@ -91,6 +91,11 @@ svg#canvas { width: 100%; height: auto; display: block; touch-action: none; bord
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: var(--muted); font-size: 0.82rem; margin-top: 12px; min-height: 30px; }
 .legend i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 7px; border-radius: 2px; }
 .legend .grow { flex: 1; }
+.viewtabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); }
+.viewtabs button { font: inherit; font-size: 0.86rem; font-weight: 600; border: 0; border-radius: 999px; padding: 7px 16px; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.viewtabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 12px -6px var(--accent); }
+.viewtabs button:disabled { opacity: .45; cursor: not-allowed; }
+.viewtabs button:not(:disabled):not([aria-pressed="true"]):hover { color: var(--fg); }
 
 .editor { margin-top: 12px; padding: 14px 16px; background: var(--raised); border: 1px solid var(--line); border-radius: 14px; min-height: 64px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
 .editor .hintbox { color: var(--muted); font-size: 0.85rem; line-height: 1.55; max-width: 72ch; }
@@ -199,6 +204,7 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
   <div class="main">
     <aside class="card sidebar" aria-label="Toolbox"><div class="toolbox" id="toolbox"></div></aside>
     <section class="card" aria-label="Topology">
+      <div class="viewtabs" role="group" aria-label="Canvas view"><button type="button" id="viewEdit" aria-pressed="true">Your network</button><button type="button" id="viewZoned" aria-pressed="false" disabled title="Press Segment my network to see the zones.">Zoned network</button></div>
       <svg id="canvas" viewBox="0 0 760 520" role="img" aria-label="Network topology editor"></svg>
       <div class="legend" id="legend"></div>
       <div class="editor" id="editor"></div>
@@ -528,7 +534,7 @@ const HOSPITAL = {
     ["pharm", "ehr", 5, 0], ["ehr", "billing", 4, 3]],
   fits: { 1: { g: [-0.13553641165836655], b: [0.39876127558471364] }, 2: { g: [0.15342710316629551, -0.3111689889519134], b: [-0.2875350130673109, 0.2742766361878971] } }
 };
-const state = { nodes: [], links: [], K: 0, qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
+const state = { nodes: [], links: [], K: 0, view: "edit", qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
 let nextId = 1;
 
 const $ = id => document.getElementById(id);
@@ -552,7 +558,7 @@ function model() {
 }
 const limitK = () => (state.K === 3 ? 12 : 14);
 
-function afterEdit() { state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderAll(); }
+function afterEdit() { state.view = "edit"; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderAll(); }
 
 function runPlan() {
   if (state.K < 2) { state.plan = null; return; }
@@ -580,20 +586,24 @@ function laneLayout(plan) {
   });
   return { pos, lanes };
 }
+const validPlan = () => (state.plan && !state.plan.tooBig && state.plan.K === state.K ? state.plan : null);
+const isZoned = () => !!validPlan() && state.view === "zoned";
 let tween = null;
-function startTween() {
-  const plan = state.plan; if (!plan) return;
+function startTween(back) {
+  const plan = validPlan(); if (!plan) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  tween = { t0: performance.now(), dur: reduce ? 0 : 650 };
+  tween = { t0: performance.now(), dur: reduce ? 0 : 650, back: !!back };
   const step = () => { if (!tween) return; renderCanvas(); if (performance.now() - tween.t0 < tween.dur) requestAnimationFrame(step); else { tween = null; renderCanvas(); } };
   requestAnimationFrame(step);
 }
 function renderCanvas() {
-  const plan = state.plan && !state.plan.tooBig && state.plan.K === state.K ? state.plan : null;
+  const zoned = isZoned(), goingBack = !zoned && !!validPlan() && !!tween && tween.back;
+  const plan = zoned || goingBack ? validPlan() : null;
+  syncViewTabs();
   const zid = id => (plan ? plan.z[indexOfId(id)] : null);
   const L = plan ? laneLayout(plan) : null;
   let p = 1;
-  if (L && tween && tween.dur > 0) { const t = Math.min(1, (performance.now() - tween.t0) / tween.dur); p = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  if (L && tween && tween.dur > 0) { const t = Math.min(1, (performance.now() - tween.t0) / tween.dur), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; p = tween.back ? 1 - e : e; }
   const at = n => { if (!L) return { x: n.x, y: n.y }; const q = L.pos.get(n.id); return { x: n.x + (q.x - n.x) * p, y: n.y + (q.y - n.y) * p }; };
   const P = new Map(state.nodes.map(n => [n.id, at(n)]));
   const laneOf = new Map(L ? L.lanes.map(l => [l.zone, l]) : []);
@@ -637,9 +647,21 @@ function renderCanvas() {
   if (!state.nodes.length) out += `<text x="${CW / 2}" y="${CH / 2}" text-anchor="middle" fill="var(--muted)" font-size="15">Empty canvas. Drag an icon from the toolbox onto it, or press Load Template.</text>`;
   svg.innerHTML = out;
   const item = (col, label) => `<span><i style="border-color:${col}"></i>${label}</span>`;
-  $("legend").innerHTML = plan ? item("var(--bad)", "red: crosses zones, needs a firewall rule") + item("var(--good)", "green: stays inside a zone") + `<span class="grow"></span><button type="button" class="btn ghost small" id="backEdit">Back to editing</button>` : "";
-  const be = $("backEdit"); if (be) be.onclick = () => { state.plan = null; state.qres = null; state.K = 0; state.selected = null; renderAll(); };
+  $("legend").innerHTML = zoned ? item("var(--bad)", "red: crosses zones, needs a firewall rule") + item("var(--good)", "green: stays inside a zone") : "";
 }
+function syncViewTabs() {
+  const has = !!validPlan(), zoned = isZoned();
+  $("viewEdit").setAttribute("aria-pressed", String(!zoned));
+  $("viewZoned").setAttribute("aria-pressed", String(zoned));
+  $("viewZoned").disabled = !has;
+  $("viewZoned").title = has ? "Show the zones the solver found." : "Press Segment my network to see the zones.";
+}
+function setView(v) {
+  if (v === state.view || (v === "zoned" && !validPlan())) return;
+  state.view = v; state.selected = null; renderAll(); startTween(v === "edit");
+}
+$("viewEdit").addEventListener("click", () => setView("edit"));
+$("viewZoned").addEventListener("click", () => setView("zoned"));
 function svgPoint(ev) {
   const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
   const p = pt.matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y };
@@ -652,7 +674,7 @@ svg.addEventListener("pointerdown", ev => {
     connect = { from: id, x: n.x, y: n.y };
     svg.setPointerCapture(ev.pointerId); state.selected = { type: "node", id }; renderAll(); return;
   }
-  if (nodeEl && state.plan) { state.selected = { type: "node", id: +nodeEl.dataset.node }; renderAll(); return; }
+  if (nodeEl && isZoned()) { state.selected = { type: "node", id: +nodeEl.dataset.node }; renderAll(); return; }
   if (nodeEl) {
     const id = +nodeEl.dataset.node;
     const n = state.nodes[indexOfId(id)], p = svgPoint(ev);
@@ -693,7 +715,7 @@ svg.addEventListener("pointerup", ev => {
 /* ---------------- editor under the canvas ---------------- */
 function renderEditor() {
   const el = $("editor"), s = state.selected;
-  if (!s && state.plan) { el.innerHTML = `<span class="hintbox">Showing the quantum result: each column is one zone. Click a link to see its numbers, or press <b>Back to editing</b> to change the network.</span>`; return; }
+  if (!s && isZoned()) { el.innerHTML = `<span class="hintbox">Showing the zones: each column is one zone. Click a link to see its numbers, or switch to <b>Your network</b> to change the layout.</span>`; return; }
   if (!s) { el.innerHTML = `<span class="hintbox">Drag a system to move it. To link two systems, drag from the teal dot on one onto the other. Click a link to set its <b>traffic</b> (how much the business needs it) and <b>risk</b> (damage that could spread if both sit in one zone).</span>`; return; }
   if (s.type === "node") {
     const n = state.nodes[indexOfId(s.id)];
@@ -723,7 +745,7 @@ function paintRanges() {
   });
 }
 document.addEventListener("input", ev => { if (ev.target.type === "range") paintRanges(); });
-function afterEditKeep() { state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderCanvas(); renderPanels(); }
+function afterEditKeep() { state.view = "edit"; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderCanvas(); renderPanels(); }
 
 /* ---------------- panels ---------------- */
 function pairRows(m, idxs) {
@@ -831,7 +853,7 @@ $("runQuantum").addEventListener("click", () => {
   const pack = q => ({ q, K, plan: { K, z: q.z, best: q.exactBest, optimal: [], total: Math.pow(K, m.n - 1), ms: q.ms, costs: null, ...describe(m, q.z) } });
   const local = () => { try { const q = runQuantumSim(m, K, 1024); q.exactBest = bruteForce(m, K).best; q.engine = "browser"; return pack(q); } catch (err) { console.error(err); return null; } };
   const finish = done => setTimeout(() => {
-    if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; }
+    if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; state.view = "zoned"; }
     b.textContent = RUN_LABEL; renderAll(); if (done) startTween();
   }, Math.max(0, 900 - (performance.now() - shown)));
   const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">The chip run did not finish</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
