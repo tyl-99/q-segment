@@ -98,6 +98,8 @@ svg#canvas[hidden], svg#zcanvas[hidden] { display: none; }
 .sidebar.locked .tool { opacity: .4; pointer-events: none; }
 .editor .ro { font-size: 0.9rem; color: var(--muted); }
 .editor .ro b { color: var(--fg); font-size: 1rem; }
+.editor .ro b.bad { color: var(--bad); }
+.legend .shield { width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; }
 .viewtabs button:disabled { opacity: .45; cursor: not-allowed; }
 .viewtabs button:not(:disabled):not([aria-pressed="true"]):hover { color: var(--fg); }
 
@@ -539,7 +541,7 @@ const HOSPITAL = {
     ["pharm", "ehr", 5, 0], ["ehr", "billing", 4, 3]],
   fits: { 1: { g: [-0.13553641165836655], b: [0.39876127558471364] }, 2: { g: [0.15342710316629551, -0.3111689889519134], b: [-0.2875350130673109, 0.2742766361878971] } }
 };
-const state = { nodes: [], links: [], K: 0, view: "edit", zsel: null, qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
+const state = { nodes: [], links: [], K: 0, view: "edit", zsel: null, breach: null, qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
 let nextId = 1;
 
 const $ = id => document.getElementById(id);
@@ -563,7 +565,7 @@ function model() {
 }
 const limitK = () => (state.K === 3 ? 12 : 14);
 
-function afterEdit() { state.view = "edit"; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderAll(); }
+function afterEdit() { state.view = "edit"; state.breach = null; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderAll(); }
 
 function runPlan() {
   if (state.K < 2) { state.plan = null; return; }
@@ -613,6 +615,9 @@ function renderCanvas() {
   const at = n => { if (!L) return { x: n.x, y: n.y }; const q = L.pos.get(n.id); return { x: n.x + (q.x - n.x) * p, y: n.y + (q.y - n.y) * p }; };
   const P = new Map(state.nodes.map(n => [n.id, at(n)]));
   const laneOf = new Map(L ? L.lanes.map(l => [l.zone, l]) : []);
+  const br = zoned && state.breach ? state.breach : null, el = br ? performance.now() - br.t0 : 0, bdone = !!br && el >= br.end;
+  const inf = id => (br && br.delay.has(id) ? Math.max(0, Math.min(1, (el - br.delay.get(id)) / 280)) : 0);
+  const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
   let out = "";
   if (L) L.lanes.forEach(l => {
     const zc = zoneVar(l.zone);
@@ -624,7 +629,10 @@ function renderCanvas() {
     const sel = selObj && selObj.type === "link" && selObj.k === k;
     const cut = plan ? zid(l.a) !== zid(l.b) : null;
     let col = "var(--wire)", width = 2.5, op = 1;
-    if (cut !== null) {
+    if (br) {
+      const hot = !cut && inf(l.a) >= 1 && inf(l.b) >= 1 && zid(l.a) === br.zone;
+      col = hot ? "var(--bad)" : "var(--wire)"; width = hot ? 3.2 : 2; op = hot ? 1 : 0.35;
+    } else if (cut !== null) {
       if (l.t === 0 && l.r === 0) op = 0.3;
       else { col = cut ? "var(--bad)" : "var(--good)"; width = cut ? 2.2 : 3.2; op = cut ? 0.78 : 1; }
     }
@@ -636,24 +644,52 @@ function renderCanvas() {
     }
     out += `<line class="hit" data-link="${k}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--accent)" stroke-opacity="0" stroke-width="18" stroke-linecap="round" style="cursor:pointer"/>`;
   });
+  const shields = [];
+  if (br) {
+    const dot = (pt, a) => `<g style="pointer-events:none" opacity="${a}"><circle cx="${pt.x}" cy="${pt.y}" r="12" fill="var(--bad)" fill-opacity="0.25"/><circle cx="${pt.x}" cy="${pt.y}" r="5.5" fill="var(--bad)"/></g>`;
+    br.parent.forEach((par, child) => {
+      const d0 = br.delay.get(par), d1 = br.delay.get(child);
+      if (el >= d0 && el <= d1) out += dot(lerp(P.get(par), P.get(child), (el - d0) / (d1 - d0)), 1);
+    });
+    const lane = laneOf.get(br.zone);
+    br.blocked.forEach(b => {
+      const a = P.get(b.from), c = P.get(b.to), xb = c.x > a.x ? lane.x + lane.w : lane.x, t = Math.max(0, Math.min(1, (xb - a.x) / (c.x - a.x || 1)));
+      const cross = lerp(a, c, t), d0 = br.delay.get(b.from) + 120;
+      if (el >= d0 && el < d0 + 450) out += dot(lerp(a, cross, (el - d0) / 450), 1);
+      if (el >= d0 + 450 && !shields.some(o => Math.hypot(o.pt.x - cross.x, o.pt.y - cross.y) < 46)) shields.push({ pt: cross, s: Math.min(1, (el - d0 - 450) / 200) });
+    });
+    const first = br.blocked.length ? Math.min(...br.blocked.map(b => br.delay.get(b.from) + 570)) : Infinity;
+    if (el >= first) { const k = Math.min(1, (el - first) / 300); out += `<rect x="${lane.x}" y="12" width="${lane.w}" height="${CH - 24}" rx="16" fill="none" stroke="var(--accent)" stroke-width="3.5" opacity="${k}" style="pointer-events:none"/><rect x="${lane.x - 4}" y="8" width="${lane.w + 8}" height="${CH - 16}" rx="19" fill="none" stroke="var(--accent)" stroke-width="6" opacity="${0.18 * k}" style="pointer-events:none"/>`; }
+  }
   state.nodes.forEach(n => {
     const q = P.get(n.id), zi = zid(n.id), sel = !zoned && selObj && selObj.type === "node" && selObj.id === n.id;
     const lane = zi === null ? null : laneOf.get(zi);
     const w = lane ? Math.min(nodeWidth(n), lane.maxNode) : nodeWidth(n), h = 64;
     const zc = zi === null ? null : zoneVar(zi);
-    const stroke = sel ? "var(--accent)" : zc || "var(--wire)", sw = sel ? 2.5 : zc ? 2 : 1.5;
-    const ic = zc || "var(--muted)";
-    out += `<g class="nodeg" data-node="${n.id}" style="cursor:${plan ? "default" : "grab"}">
+    const hit = inf(n.id), zsel = zoned && selObj && selObj.type === "node" && selObj.id === n.id;
+    const stroke = hit > 0 ? "var(--bad)" : sel || zsel ? "var(--accent)" : zc || "var(--wire)", sw = hit > 0 || sel || zsel ? 2.5 : zc ? 2 : 1.5;
+    const ic = hit > 0 ? "var(--bad)" : zc || "var(--muted)";
+    if (br && n.id === br.src) {
+      const ph = bdone ? 0.45 : (el % 1100) / 1100, g = 4 + 12 * ph;
+      out += `<rect x="${q.x - w / 2 - g}" y="${q.y - h / 2 - g}" width="${w + 2 * g}" height="${h + 2 * g}" rx="${12 + g}" fill="none" stroke="var(--bad)" stroke-width="2.5" opacity="${(1 - ph) * 0.8}" style="pointer-events:none"/>`;
+    }
+    out += `<g class="nodeg" data-node="${n.id}" style="cursor:${plan ? "pointer" : "grab"}">
       <rect x="${q.x - w / 2}" y="${q.y - h / 2}" width="${w}" height="${h}" rx="12" fill="var(--raised)" stroke="${stroke}" stroke-width="${sw}"/>
       ${zc ? `<rect x="${q.x - w / 2}" y="${q.y - h / 2}" width="${w}" height="${h}" rx="12" fill="${zc}" fill-opacity="0.12" style="pointer-events:none"/>` : ""}
+      ${hit > 0 ? `<rect x="${q.x - w / 2}" y="${q.y - h / 2}" width="${w}" height="${h}" rx="12" fill="var(--bad)" fill-opacity="${0.22 * hit}" style="pointer-events:none"/>` : ""}
+      ${bdone && hit === 0 ? `<g style="pointer-events:none"><circle cx="${q.x + w / 2 - 4}" cy="${q.y - h / 2 + 4}" r="9" fill="var(--good)"/><path d="M${q.x + w / 2 - 8} ${q.y - h / 2 + 4} l3 3 l5 -6" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>` : ""}
       <g transform="translate(${q.x - 12} ${q.y - 26})" style="pointer-events:none;color:${ic}">${iconSvg(n.type, 'width="24" height="24"')}</g>
       <text x="${q.x}" y="${q.y + 20}" text-anchor="middle" font-size="14" font-weight="600" fill="var(--fg)" style="pointer-events:none;user-select:none">${esc(n.name)}</text>
       ${plan ? "" : `<g class="port" data-port="${n.id}" style="cursor:crosshair"><circle cx="${q.x + w / 2}" cy="${q.y}" r="14" fill="transparent"/><circle class="dot" cx="${q.x + w / 2}" cy="${q.y}" r="6.5" fill="var(--accent)" stroke="var(--canvas)" stroke-width="2.5"/></g>`}</g>`;
   });
+  shields.forEach(({ pt, s: k }) => {
+    out += `<g transform="translate(${pt.x} ${pt.y}) scale(${0.6 + 0.4 * k})" opacity="${k}" style="pointer-events:none"><circle r="13" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/><path d="M0 -7.5 L6 -5 L6 0.5 C6 4.2 3.2 6.6 0 8 C-3.2 6.6 -6 4.2 -6 0.5 L-6 -5 Z" fill="var(--accent)"/></g>`;
+  });
   if (!state.nodes.length && !zoned) out += `<text x="${CW / 2}" y="${CH / 2}" text-anchor="middle" fill="var(--muted)" font-size="15">Empty canvas. Drag an icon from the toolbox onto it, or press Load Template.</text>`;
   (zoned ? zsvg : svg).innerHTML = out;
   const item = (col, label) => `<span><i style="border-color:${col}"></i>${label}</span>`;
-  $("legend").innerHTML = zoned ? item("var(--bad)", "red: crosses zones, needs a firewall rule") + item("var(--good)", "green: stays inside a zone") : "";
+  const shieldIcon = `<svg class="shield" viewBox="-8 -9 16 18"><path d="M0 -7.5 L6 -5 L6 0.5 C6 4.2 3.2 6.6 0 8 C-3.2 6.6 -6 4.2 -6 0.5 L-6 -5 Z" fill="var(--accent)"/></svg>`;
+  $("legend").innerHTML = !zoned ? "" : br ? item("var(--bad)", "red: reached by the attacker") + `<span>${shieldIcon}a firewall between zones stops it</span>` : item("var(--bad)", "red: crosses zones, needs a firewall rule") + item("var(--good)", "green: stays inside a zone");
 }
 function syncViewTabs() {
   const has = !!validPlan(), zoned = isZoned();
@@ -664,13 +700,39 @@ function syncViewTabs() {
 }
 function setView(v) {
   if (v === state.view || (v === "zoned" && !validPlan())) return;
-  state.view = v; state.selected = null; state.zsel = null; renderAll(); if (v === "zoned") startTween();
+  state.view = v; state.selected = null; state.zsel = null; state.breach = null; renderAll(); if (v === "zoned") startTween();
 }
 zsvg.addEventListener("pointerdown", ev => {
-  const linkEl = ev.target.closest("[data-link]");
-  state.zsel = linkEl ? { type: "link", k: +linkEl.dataset.link } : null;
+  const nodeEl = ev.target.closest("[data-node]"), linkEl = ev.target.closest("[data-link]");
+  if (nodeEl) { const id = +nodeEl.dataset.node; if (state.breach && state.breach.src !== id) state.breach = null; state.zsel = { type: "node", id }; }
+  else if (linkEl) state.zsel = { type: "link", k: +linkEl.dataset.link };
+  else { state.zsel = null; state.breach = null; }
   renderCanvas(); renderEditor();
 });
+const HOP = 650;
+function startBreach(id) {
+  const plan = validPlan(); if (!plan) return;
+  const zone = plan.z[indexOfId(id)], same = v => plan.z[indexOfId(v)] === zone;
+  const delay = new Map([[id, 300]]), parent = new Map(), queue = [id];
+  while (queue.length) {
+    const u = queue.shift();
+    state.links.forEach(l => { const v = l.a === u ? l.b : l.b === u ? l.a : null; if (v === null || delay.has(v) || !same(v)) return; delay.set(v, delay.get(u) + HOP); parent.set(v, u); queue.push(v); });
+  }
+  const last = Math.max(...delay.values());
+  state.nodes.forEach(n => { if (same(n.id) && !delay.has(n.id)) delay.set(n.id, last + HOP); });
+  const blocked = [];
+  state.links.forEach(l => { const sa = same(l.a), sb = same(l.b); if (sa !== sb) blocked.push({ from: sa ? l.a : l.b, to: sa ? l.b : l.a }); });
+  const end = Math.max(Math.max(...delay.values()) + 300, ...blocked.map(b => delay.get(b.from) + 800));
+  state.breach = { src: id, zone, delay, parent, blocked, end, t0: performance.now(), reached: delay.size - 1, total: state.nodes.length - 1 };
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) state.breach.t0 -= end;
+  renderEditor();
+  const br = state.breach, step = () => {
+    if (state.breach !== br || !isZoned()) return;
+    renderCanvas();
+    if (performance.now() - br.t0 < br.end) requestAnimationFrame(step); else renderEditor();
+  };
+  requestAnimationFrame(step);
+}
 $("viewEdit").addEventListener("click", () => setView("edit"));
 $("viewZoned").addEventListener("click", () => setView("zoned"));
 function svgPoint(ev) {
@@ -726,8 +788,20 @@ svg.addEventListener("pointerup", ev => {
 function renderEditor() {
   const el = $("editor"), s = state.selected;
   if (isZoned()) {
-    const z = state.zsel, l = z && state.links[z.k], plan = validPlan();
-    if (!l) { el.innerHTML = `<span class="hintbox">View only: each column is one zone. Click a link to see its numbers. To change the network, switch to <b>Your network</b>.</span>`; return; }
+    const z = state.zsel, plan = validPlan();
+    if (z && z.type === "node") {
+      const n = state.nodes[indexOfId(z.id)], br = state.breach && state.breach.src === z.id ? state.breach : null;
+      const fin = br && performance.now() - br.t0 >= br.end, all = state.nodes.length - 1;
+      el.innerHTML = `<span class="chip">${iconSvg(n.type)}${esc(n.name)}</span>` + (fin
+        ? `<span class="ro"><b class="bad">The attacker reaches ${br.reached} of ${all} other systems.</b> With no zones, it would reach all ${all}.</span><span class="grow"></span><button type="button" class="btn ghost" id="resetBreach">Reset</button>`
+        : br ? `<span class="ro">The attack is spreading…</span>`
+        : `<span class="ro">What if this system gets hacked?</span><span class="grow"></span><button type="button" class="btn danger" id="breachBtn">Simulate breach</button>`);
+      const bb = $("breachBtn"); if (bb) bb.onclick = () => startBreach(z.id);
+      const rb = $("resetBreach"); if (rb) rb.onclick = () => { state.breach = null; renderCanvas(); renderEditor(); };
+      return;
+    }
+    const l = z && state.links[z.k];
+    if (!l) { el.innerHTML = `<span class="hintbox">View only: each column is one zone. Click a system to simulate a breach, or a link to see its numbers. To change the network, switch to <b>Your network</b>.</span>`; return; }
     const ia = indexOfId(l.a), ib = indexOfId(l.b), a = state.nodes[ia], b = state.nodes[ib], cut = plan.z[ia] !== plan.z[ib];
     el.innerHTML = `<span class="pair"><span class="chip">${iconSvg(a.type)}${esc(a.name)}</span><span class="arrow">↔</span><span class="chip">${iconSvg(b.type)}${esc(b.name)}</span></span><span class="ro">Traffic <b>${l.t}</b></span><span class="ro">Risk <b>${l.r}</b></span><span class="ro">${cut ? "Different zones: needs a firewall rule." : "Same zone: no firewall between them."}</span>`;
     return;
@@ -761,7 +835,7 @@ function paintRanges() {
   });
 }
 document.addEventListener("input", ev => { if (ev.target.type === "range") paintRanges(); });
-function afterEditKeep() { state.view = "edit"; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderCanvas(); renderPanels(); }
+function afterEditKeep() { state.view = "edit"; state.breach = null; state.plan = null; state.qres = null; state.K = 0; state.hover = null; renderCanvas(); renderPanels(); }
 
 /* ---------------- panels ---------------- */
 function pairRows(m, idxs) {
@@ -870,7 +944,7 @@ $("runQuantum").addEventListener("click", () => {
   const pack = q => ({ q, K, plan: { K, z: q.z, best: q.exactBest, optimal: [], total: Math.pow(K, m.n - 1), ms: q.ms, costs: null, ...describe(m, q.z) } });
   const local = () => { try { const q = runQuantumSim(m, K, 1024); q.exactBest = bruteForce(m, K).best; q.engine = "browser"; return pack(q); } catch (err) { console.error(err); return null; } };
   const finish = done => setTimeout(() => {
-    if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; state.view = "zoned"; }
+    if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; state.view = "zoned"; state.breach = null; state.zsel = null; }
     b.textContent = RUN_LABEL; renderAll(); if (done) startTween();
   }, Math.max(0, 900 - (performance.now() - shown)));
   const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">The chip run did not finish</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
