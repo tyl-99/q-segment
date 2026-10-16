@@ -9,15 +9,16 @@ Network zoning that balances security and business. Q-Segment splits a network i
 
 Every link between two systems has a **traffic** value (how much the business needs them to talk) and a **risk** value (how much damage spreads if an attacker on one reaches the other). A split into zones costs the traffic on links that cross zones (each needs a firewall rule) plus the risk on links kept inside a zone. With `w = risk - traffic` per link, finding the cheapest split is a **signed Max-k-Cut** problem. We solve it for **3 zones** with QAOA in Qiskit.
 
-## What we found (3 zones, 8 systems)
+## What we found (3 zones, 8 systems, 21 qubits)
 
-- **2,187 possible splits**, solved with a **21-qubit** QAOA circuit (**436 two-qubit gates** on the chip).
-- On **ibm_kingston**, about **12%** of readouts are valid splits, and a valid readout is the best split **0.94%** of the time (vs **1.87%** in ideal simulation).
-- **Post-processing** (local search starting from the chip's readouts) reaches the best split.
-- **Readout correction** raised valid answers from **12.7% to 13.4%**; IBM's **dynamical decoupling + twirling** lowered them to **1.4%**.
-- A normal computer finds the best split in **about a millisecond**. At **60-150 systems**, Gurobi could not prove the best answer in any of **12 runs** (60 s each).
+![Time against classical solvers](research/figures/3zone_time_vs_classical.png)
 
-**Honest conclusion:** at 8 systems a normal computer is far faster, and the chip only finds the best split with classical post-processing. We make no speedup claim. Whether quantum hardware helps at the sizes where exact classical solvers stall is an open question: at 100 systems the 3-zone encoding needs 297 qubits (today's ibm_kingston has 156), with much lower noise than today.
+![Valid answers on ibm_kingston with and without error suppression](research/figures/3zone_error_suppression.png)
+
+- A valid chip readout is the best split **0.94%** of the time (**1.87%** in ideal simulation); post-processing then reaches the best split.
+- At **60-150 systems**, Gurobi could not prove the best answer in any of **12 runs** (60 s each).
+
+**Honest conclusion:** today a normal computer is far faster, and we make no speedup claim. Larger networks would need hundreds of qubits with much lower noise (297 qubits at 100 systems; ibm_kingston has 156).
 
 ## What we built vs what we reused
 
@@ -41,6 +42,7 @@ research/
   experiments/        numbered scripts; 08-17 are the 3-zone results, 01-07 the earlier 2-zone version
   results/            JSON output of every experiment, including raw chip counts
   notebooks/          01_circuit (the circuit), 02_all_results (tables), 03_hackathon_figures (figures)
+  figures/            the charts shown above
 ```
 
 ## Reproduce the research results
