@@ -249,6 +249,37 @@ def counts_to_indices(counts, prep):
     return out, (valid / total if total else 0.0)
 
 
+def measured_details(counts, prep):
+    """Raw chip readouts, before post-processing: the lowest-cost valid bitstring (zone qubits grouped per
+    system, first zone first) and the share of all readouts that were an optimal split."""
+    n, K, direct = prep["n"], prep["K"], prep["direct"]
+    best_cost, total, best_bits, best_count, optimal = None, 0, None, 0, 0
+    for bits, c in counts.items():
+        bits = bits.replace(" ", ""); total += c
+        bit = lambda q: bits[len(bits) - 1 - q] == "1"
+        idx, ok, groups = 0, True, []
+        for i in range(1, n):
+            if K == 2:
+                z = 1 if bit(variable(i, 0, K)) else 0
+                groups.append(str(z))
+            else:
+                hot = [k for k in range(K) if bit(variable(i, k, K))]
+                if len(hot) != 1:
+                    ok = False; break
+                z = hot[0]
+                groups.append("".join("1" if k == z else "0" for k in range(K)))
+            idx += z * K ** (i - 1)
+        if not ok:
+            continue
+        cost = float(direct[idx])
+        if cost <= float(direct.min()) + 1e-9:
+            optimal += c
+        if best_cost is None or cost < best_cost - 1e-9 or (abs(cost - best_cost) <= 1e-9 and c > best_count):
+            best_cost, best_bits, best_count = cost, " ".join(groups), c
+    return {"best_measured_bitstring": best_bits, "best_measured_cost": best_cost,
+            "optimal_share": round(optimal / total, 5) if total else 0.0}
+
+
 def run(payload):
     prep = prepare(payload)
     logical = transpile(prep["circuit"], basis_gates=["cx", "rz", "sx", "x"], optimization_level=1, seed_transpiler=7)

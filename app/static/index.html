@@ -196,6 +196,12 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
 .qibmnote { margin: 0 0 10px; font-size: 0.8rem; }
 .loading .msg { min-height: 1.4em; }
 .jobline { margin: 8px 0 0; font-size: 0.76rem; color: var(--muted); font-family: var(--mono); word-break: break-all; }
+.ibmbox { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); }
+.ibmbox h4 { margin: 0 0 8px; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.ibmbox dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 0.84rem; }
+.ibmbox dt { color: var(--muted); }
+.ibmbox dd { margin: 0; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+.ibmbox .mono { font-family: var(--mono); }
 </style>
 
 <div class="app">
@@ -859,7 +865,7 @@ function renderResult() {
   const fewer = used < plan.K ? `<p class="note zonenote">The best plan here uses only ${used} of the ${plan.K} zones. Another zone would add more firewall rules for busy links than the risk it removes.</p>` : "";
   el.innerHTML = `
     ${fewer}${zonesHtml}
-    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? (state.qres.engine === "ibm" ? `<div class="kpi"><b>${state.qres.chip != null ? state.qres.chip.toFixed(0) + " s" : "—"}</b><span>time on the IBM chip</span></div>` : `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>`) : ""}</div>${state.qres && state.qres.engine === "ibm" ? `<p class="jobline">IBM job ${esc(state.qres.jobId || "")} on ${esc(state.qres.backend || "")}</p>` : ""}
+    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? (state.qres.engine === "ibm" ? `<div class="kpi"><b>${state.qres.chip != null ? state.qres.chip.toFixed(0) + " s" : "—"}</b><span>time on the IBM chip</span></div>` : `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>`) : ""}</div>${state.qres && state.qres.engine === "ibm" ? ibmDetails(state.qres) : ""}
     <details class="more"><summary>Details</summary>
       <h3>Firewall rules to create <span class="badge bad">${plan.rules.length}</span></h3>${pairRows(m, plan.rules)}
       <h3>Risk still open inside zones <span class="badge warn">${plan.open.length}</span></h3>${pairRows(m, plan.open)}
@@ -923,6 +929,11 @@ svg.addEventListener("drop", ev => {
 
 const QLIMIT = 20000;
 const RUN_LABEL = "Segment my network";
+function ibmDetails(q) {
+  const pct = (v, d) => (v == null ? "—" : (100 * v).toFixed(d) + "%");
+  const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+  return `<div class="ibmbox"><h4>IBM run details</h4><dl>${row("Job ID", `<span class="mono">${esc(q.jobId || "—")}</span>`)}${row("Chip", esc(q.backend || "—"))}${row("Best measured bitstring", q.bits ? `<span class="mono">${esc(q.bits)}</span>` : "—")}${row("Its cost", q.bitsCost != null ? String(q.bitsCost) : "—")}${row("Feasible readouts", pct(q.valid, 1) + (q.shots ? ` of ${q.shots.toLocaleString()}` : ""))}${row("Optimal readouts", pct(q.optimal, 2))}</dl></div>`;
+}
 function syncQuantum() {
   const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
   const size = Math.pow(K, Math.max(n - 1, 0)), note = $("qIbmNote");
@@ -953,7 +964,7 @@ $("runQuantum").addEventListener("click", () => {
     body.access_code = $("qCode").value.trim(); body.chip = chip;
     const steps = { preparing: "Building the circuit…", queued: "Waiting in IBM's queue…", reading: "Reading the chip's answers…" };
     const poll = id => fetch(`/api/job/${id}`, { cache: "no-store" }).then(r => r.json()).then(j => {
-      if (j.status === "done") { const r = j.result; window.qsegmentLastRun = r; finish(pack({ K, z: r.zones, bestCost: r.cost, exactBest: r.best_possible, ms: r.compute_ms, engine: "ibm", chip: r.chip_seconds, jobId: r.ibm_job_id, backend: r.backend })); }
+      if (j.status === "done") { const r = j.result; window.qsegmentLastRun = r; finish(pack({ K, z: r.zones, bestCost: r.cost, exactBest: r.best_possible, ms: r.compute_ms, engine: "ibm", chip: r.chip_seconds, jobId: r.ibm_job_id, backend: r.backend, shots: r.shots, valid: r.valid_share, bits: r.best_measured_bitstring, bitsCost: r.best_measured_cost, optimal: r.optimal_share })); }
       else if (j.status === "error") fail(j.error || "Something went wrong on the server.");
       else { msg(j.status === "running" ? `Running on ${j.backend || "the IBM chip"}…` : steps[j.status] || "Working…"); setTimeout(() => poll(id), 2500); }
     }).catch(() => setTimeout(() => poll(id), 4000));

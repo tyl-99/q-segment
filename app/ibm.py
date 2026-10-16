@@ -129,7 +129,8 @@ def _work(job_id, payload):
         best_idx = solver.best_after_cleanup(prep, list(indices))
         result = solver.summary(prep, best_idx, {"engine": "ibm-quantum", "backend": chip if not s["dry_run"] else "dry-run",
                                                  "ibm_job_id": ibm_id, "chip_seconds": chip_seconds, "valid_share": round(valid_share, 4),
-                                                 "two_qubit_gates_routed": two_q, "shots": SHOTS})
+                                                 "two_qubit_gates_routed": two_q, "shots": SHOTS,
+                                                 **solver.measured_details(counts, prep)})
         set_job(job_id, status="done", result=result)
     except solver.NetworkError as err:
         set_job(job_id, status="error", error=str(err))
