@@ -72,9 +72,10 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn svg { width: 16px; height: 16px; flex: none; }
 
-.main { display: grid; grid-template-columns: 188px minmax(0, 1.6fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+.main { display: grid; grid-template-columns: 188px minmax(0, 1.6fr) minmax(300px, 1fr); gap: 16px; align-items: stretch; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
-.sidebar { padding: 14px 12px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.sidebar { padding: 14px 12px; }
+.sidebar .toolbox { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
 .toolbox { display: flex; flex-direction: column; gap: 7px; }
 .toolbox .hint { font-size: 0.76rem; color: var(--muted); margin: 2px 4px 8px; line-height: 1.4; }
 .tool { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 10px 12px; background: var(--raised); border: 1px solid transparent; border-radius: 10px; cursor: grab; font-size: 0.85rem; font-weight: 600; color: var(--fg); text-align: left; white-space: nowrap; transition: border-color .15s, transform .1s, background .15s; }
@@ -168,6 +169,7 @@ details.more h3 { display: flex; align-items: center; gap: 8px; }
 h3 { margin: 16px 0 8px; font-family: var(--display); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
 
 .rightcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.rightcol > .card:last-child { flex: 1 1 auto; }
 .qcard .qhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 .qcard .qhead h3 { margin: 0; color: var(--fg); font-size: 0.82rem; }
 .qrow { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -186,7 +188,7 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
 @media (max-width: 1060px) { .main { grid-template-columns: 170px minmax(0, 1fr); } .rightcol { grid-column: 1 / -1; } }
 @media (max-width: 720px) {
   .main { grid-template-columns: minmax(0, 1fr); }
-  .sidebar { position: static; }
+  .sidebar .toolbox { position: static; }
   .toolbox { flex-direction: row; flex-wrap: wrap; }
   .toolbox .hint { flex: 1 0 100%; }
   .app { padding-inline: 16px; }
