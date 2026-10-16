@@ -196,12 +196,26 @@ ul.plain { margin: 4px 0; padding-left: 18px; }
 .qibmnote { margin: 0 0 10px; font-size: 0.8rem; }
 .loading .msg { min-height: 1.4em; }
 .jobline { margin: 8px 0 0; font-size: 0.76rem; color: var(--muted); font-family: var(--mono); word-break: break-all; }
-.ibmbox { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); }
-.ibmbox h4 { margin: 0 0 8px; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-.ibmbox dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 0.84rem; }
-.ibmbox dt { color: var(--muted); }
-.ibmbox dd { margin: 0; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
-.ibmbox .mono { font-family: var(--mono); }
+details.more.ibm { margin-top: 14px; }
+.ibm .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.ibm .stat { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.ibm .stat b { display: block; font-family: var(--display); font-size: 1.05rem; color: var(--fg); overflow-wrap: anywhere; }
+.ibm .stat span { font-size: 0.74rem; color: var(--muted); }
+.ibm .jobid { margin: 10px 0 0; font-size: 0.76rem; color: var(--muted); overflow-wrap: anywhere; }
+.ibm .jobid code { font-family: var(--mono); color: var(--fg); }
+.ibm .bits-head { margin: 14px 0 6px; font-size: 0.78rem; color: var(--muted); }
+.ibm .bitline { font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.04em; color: var(--fg); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; overflow-x: auto; white-space: nowrap; }
+.ibm .bitgrid { display: flex; gap: 2px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; }
+.ibm .bitcol { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1 1 0; min-width: 34px; }
+.ibm .bitcol.legend { flex: 0 0 16px; min-width: 16px; color: var(--muted); font-size: 0.7rem; }
+.ibm .cell { width: 24px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); background: var(--raised); border: 1px solid var(--line); }
+.ibm .legend .cell { background: none; border-color: transparent; font-family: var(--display); font-weight: 700; }
+.ibm .cell.on { background: var(--zc); border-color: var(--zc); color: #fff; font-weight: 700; }
+.ibm .cell.fixed { border-style: dashed; }
+.ibm .bitcol .nm { margin-top: 3px; font-size: 0.68rem; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ibm .bitcol .zn { min-width: 20px; padding: 1px 6px; border-radius: 999px; font-size: 0.66rem; font-weight: 700; color: var(--zc); background: color-mix(in srgb, var(--zc) 14%, transparent); text-align: center; white-space: nowrap; }
+.ibm .legend .zn { background: none; }
+.ibm .bitnote { margin: 6px 0 0; font-size: 0.72rem; color: var(--muted); }
 </style>
 
 <div class="app">
@@ -931,8 +945,28 @@ const QLIMIT = 20000;
 const RUN_LABEL = "Segment my network";
 function ibmDetails(q) {
   const pct = (v, d) => (v == null ? "—" : (100 * v).toFixed(d) + "%");
-  const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
-  return `<div class="ibmbox"><h4>IBM run details</h4><dl>${row("Job ID", `<span class="mono">${esc(q.jobId || "—")}</span>`)}${row("Chip", esc(q.backend || "—"))}${row("Best measured bitstring", q.bits ? `<span class="mono">${esc(q.bits)}</span>` : "—")}${row("Its cost", q.bitsCost != null ? String(q.bitsCost) : "—")}${row("Feasible readouts", pct(q.valid, 1) + (q.shots ? ` of ${q.shots.toLocaleString()}` : ""))}${row("Optimal readouts", pct(q.optimal, 2))}</dl></div>`;
+  const stat = (v, k) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`;
+  let bits = "";
+  if (q.bits) {
+    const groups = q.bits.split(" "), K = groups[0].length === 1 ? 2 : groups[0].length;
+    const legend = `<div class="bitcol legend">${ZN.slice(0, K).map(z => `<div class="cell">${z}</div>`).join("")}<div class="nm">&nbsp;</div><div class="zn">&nbsp;</div></div>`;
+    const col = (cells, name, zone, fixed) => `<div class="bitcol" style="--zc:${zoneVar(zone)}">${cells}<div class="nm" title="${esc(name)}">${esc(name)}</div><div class="zn" title="${fixed ? "fixed in" : "in"} zone ${ZN[zone]}">${ZN[zone]}</div></div>`;
+    const first = state.nodes[0] ? col(ZN.slice(0, K).map((_, k) => `<div class="cell fixed${k === 0 ? " on" : ""}">${k === 0 ? "1" : "·"}</div>`).join(""), state.nodes[0].name, 0, true) : "";
+    const cols = groups.map((g, i) => {
+      const zone = g.length === 1 ? +g : g.indexOf("1"), node = state.nodes[i + 1];
+      const cells = g.length === 1 ? ZN.slice(0, 2).map((_, k) => `<div class="cell${k === zone ? " on" : ""}">${k === zone ? "1" : "0"}</div>`).join("")
+                                   : [...g].map(b => `<div class="cell${b === "1" ? " on" : ""}">${b}</div>`).join("");
+      return col(cells, node ? node.name : `system ${i + 2}`, zone, false);
+    }).join("");
+    bits = `<p class="bits-head">Best measured bitstring · ${K === 2 ? "1 qubit" : K + " qubits"} per system</p>
+      <div class="bitline">${esc(q.bits)}</div>
+      <div class="bitgrid">${legend}${first}${cols}</div>
+      <p class="bitnote">Each column is one system: its zone qubits A, B, C from top to bottom, the lit one is its zone. ${esc(state.nodes[0] ? state.nodes[0].name : "The first system")} is fixed in zone A, so it uses no qubits.</p>`;
+  }
+  return `<details class="more ibm"><summary>IBM run details</summary>
+    <div class="stats">${stat(pct(q.valid, 1) + (q.shots ? ` <small style="font-weight:500;color:var(--muted)">of ${q.shots.toLocaleString()}</small>` : ""), "feasible readouts (one zone per system)")}${stat(pct(q.optimal, 2), "optimal readouts (already the best split)")}${stat(q.bitsCost != null ? String(q.bitsCost) : "—", "cost of the best measured split")}${stat(esc(q.backend || "—"), "IBM chip")}</div>
+    <p class="jobid">IBM job <code>${esc(q.jobId || "—")}</code></p>${bits}
+  </details>`;
 }
 function syncQuantum() {
   const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
