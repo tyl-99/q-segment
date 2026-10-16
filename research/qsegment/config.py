@@ -1,0 +1,18 @@
+BASE_SEED = 2026
+N_SEEDS = 20
+SEEDS = [BASE_SEED + k for k in range(N_SEEDS)]
+SEEDS3 = SEEDS[:3]
+SHOTS = 4096
+BUDGET = SHOTS
+BUDGETS = (10, 100, 1000, 4096)
+P_VALUES = (1, 2, 3)
+
+SHOTS_OPT = 1024
+MAXITER = 300
+RHOBEG = 0.2
+TOL = 0.003
+RESTARTS = 10
+
+TRANSPILE_LEVELS = (0, 1, 2, 3)
+TRANSPILE_SEEDS = tuple(range(10))
+BACKENDS = ("sherbrooke", "fez", "marrakesh")

@@ -1,0 +1,269 @@
+{
+  "experiment": "02b_gurobi",
+  "date": "2026-10-11T17:47:54+00:00",
+  "K": 2,
+  "gurobi": "13.0.3",
+  "threads": 1,
+  "matches_brute_force": true,
+  "machine": {
+    "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "python": "3.13.11"
+  },
+  "summary": {
+    "solve_seconds": {
+      "n": 20,
+      "mean": 0.001008860400179401,
+      "std": 0.0021964781212477713,
+      "median": 0.0004932910014758818,
+      "min": 0.000454624998383224,
+      "max": 0.010336708000977524
+    },
+    "gurobi_runtime_seconds": {
+      "n": 20,
+      "mean": 0.0009774565696716309,
+      "std": 0.0020831672330271153,
+      "median": 0.00048744678497314453,
+      "min": 0.00045013427734375,
+      "max": 0.009823799133300781
+    },
+    "setup_seconds": {
+      "n": 20,
+      "mean": 0.0008587625001382548,
+      "std": 0.0022214483520661067,
+      "median": 0.0003451249995123362,
+      "min": 0.00032008299967856146,
+      "max": 0.010294874999090098
+    },
+    "nodes": {
+      "n": 20,
+      "mean": 1.0,
+      "std": 0.0,
+      "median": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    }
+  },
+  "runs": [
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.009823799133300781,
+      "setup_seconds": 0.010294874999090098,
+      "solve_seconds": 0.010336708000977524,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0006999969482421875,
+      "setup_seconds": 0.0004845000003115274,
+      "solve_seconds": 0.0007082089978212025,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0005750656127929688,
+      "setup_seconds": 0.00038379199759219773,
+      "solve_seconds": 0.000581291998969391,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0005049705505371094,
+      "setup_seconds": 0.0003546660009305924,
+      "solve_seconds": 0.0005104580013721716,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004830360412597656,
+      "setup_seconds": 0.0003341250012454111,
+      "solve_seconds": 0.000488290999783203,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.00047397613525390625,
+      "setup_seconds": 0.00034500000037951395,
+      "solve_seconds": 0.00048008399971877225,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004680156707763672,
+      "setup_seconds": 0.0003452499986451585,
+      "solve_seconds": 0.00047395900037372485,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004620552062988281,
+      "setup_seconds": 0.0003316670008643996,
+      "solve_seconds": 0.00046804099838482216,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.00049591064453125,
+      "setup_seconds": 0.00033904100200743414,
+      "solve_seconds": 0.0005020829994464293,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004780292510986328,
+      "setup_seconds": 0.0003279169977759011,
+      "solve_seconds": 0.00048266700105159543,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0005450248718261719,
+      "setup_seconds": 0.00032008299967856146,
+      "solve_seconds": 0.0005505000008270144,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0006041526794433594,
+      "setup_seconds": 0.00044916700062458403,
+      "solve_seconds": 0.0006119999998190906,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0005860328674316406,
+      "setup_seconds": 0.0004174999994575046,
+      "solve_seconds": 0.0005948750003881287,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0005319118499755859,
+      "setup_seconds": 0.0003914580011041835,
+      "solve_seconds": 0.0005383750030887313,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004889965057373047,
+      "setup_seconds": 0.0003533750023052562,
+      "solve_seconds": 0.0004946660010318737,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004858970642089844,
+      "setup_seconds": 0.0003435420003370382,
+      "solve_seconds": 0.0004919160019198898,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.0004839897155761719,
+      "setup_seconds": 0.00034737500027404167,
+      "solve_seconds": 0.0004895839992968831,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.00045800209045410156,
+      "setup_seconds": 0.0003337499983899761,
+      "solve_seconds": 0.000463542000943562,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.00045013427734375,
+      "setup_seconds": 0.0003373750005266629,
+      "solve_seconds": 0.000454624998383224,
+      "partition_cost": 26
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": 26.0,
+      "index": 120,
+      "mip_gap": 0.0,
+      "nodes": 1.0,
+      "gurobi_runtime_seconds": 0.00045013427734375,
+      "setup_seconds": 0.00034079200122505426,
+      "solve_seconds": 0.00045533299999078736,
+      "partition_cost": 26
+    }
+  ]
+}

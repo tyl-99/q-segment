@@ -1,0 +1,90 @@
+{
+  "experiment": "08_verify_3zone",
+  "date": "2026-10-12T10:45:48+00:00",
+  "seed": 1,
+  "versions": {
+    "qiskit": "2.3.0",
+    "numpy": "2.4.2"
+  },
+  "checks": [
+    {
+      "check": "problem size",
+      "pass": true,
+      "detail": "2187 valid partitions of 7 free systems into 3 zones"
+    },
+    {
+      "check": "optimum cost is 25 with 2 optimal partitions",
+      "pass": true,
+      "detail": "best 25, optimal partitions 2, worst 60, mean 43.0"
+    },
+    {
+      "check": "the two optimal partitions differ only by swapping zones B and C",
+      "pass": true,
+      "detail": "{'A': ['nurse', 'portal', 'email'], 'B': ['pharm', 'ehr', 'billing'], 'C': ['mri', 'pacs']} and {'A': ['nurse', 'portal', 'email'], 'B': ['mri', 'pacs'], 'C': ['pharm', 'ehr', 'billing']}"
+    },
+    {
+      "check": "Ising H + constant equals cost on all 2187 valid states",
+      "pass": true,
+      "detail": "max difference 0.0e+00; constant 44.0; 39 ZZ and 21 Z terms on 21 qubits"
+    },
+    {
+      "check": "W-state circuit gives equal weight on the three one-hot states",
+      "pass": true,
+      "detail": "overlap with the W state 1.000000000000"
+    },
+    {
+      "check": "Qiskit circuit equals the exact valid-subspace simulation, p=1",
+      "pass": true,
+      "detail": "max probability difference 1.4e-17; probability outside the valid states -2.2e-16; Aer statevector 0.11 s"
+    },
+    {
+      "check": "Qiskit circuit equals the exact valid-subspace simulation, p=2",
+      "pass": true,
+      "detail": "max probability difference 6.0e-17; probability outside the valid states 1.3e-14; Aer statevector 0.13 s"
+    },
+    {
+      "check": "Qiskit circuit equals the exact valid-subspace simulation, p=3",
+      "pass": true,
+      "detail": "max probability difference 2.8e-17; probability outside the valid states -8.9e-16; Aer statevector 0.17 s"
+    }
+  ],
+  "notes": [
+    "ring mixer at beta=0.1: overlap of the W state with itself afterwards 1.0000",
+    "ring mixer at beta=0.3: overlap of the W state with itself afterwards 0.9974",
+    "ring mixer at beta=0.8: overlap of the W state with itself afterwards 0.9016"
+  ],
+  "gate_counts": [
+    {
+      "design": "W-state start, XXPlusYY mixer",
+      "p": 1,
+      "cx_before_routing": 148,
+      "two_qubit_gates_fake_fez": 445,
+      "depth": 486,
+      "seconds": 0.16292687499998237
+    },
+    {
+      "design": "W-state start, XXPlusYY mixer",
+      "p": 2,
+      "cx_before_routing": 268,
+      "two_qubit_gates_fake_fez": 878,
+      "depth": 725,
+      "seconds": 0.17945391699998936
+    },
+    {
+      "design": "W-state start, XXPlusYY mixer",
+      "p": 3,
+      "cx_before_routing": 388,
+      "two_qubit_gates_fake_fez": 1325,
+      "depth": 1382,
+      "seconds": 0.23879866599997968
+    },
+    {
+      "design": "old: basis-state start, PauliEvolution mixer",
+      "p": 1,
+      "cx_before_routing": 162,
+      "two_qubit_gates_fake_fez": 376,
+      "depth": 375
+    }
+  ],
+  "all_pass": true
+}

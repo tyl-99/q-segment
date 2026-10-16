@@ -1,0 +1,9 @@
+qiskit==2.3.0
+qiskit-aer==0.17.2
+qiskit-ibm-runtime==0.45.0
+numpy==2.4.2
+scipy==1.17.0
+matplotlib==3.10.8
+jupyter
+# Optional: only for the classical comparison (experiments 02b, 09, 13-16). Needs a Gurobi licence.
+# gurobipy==13.0.3

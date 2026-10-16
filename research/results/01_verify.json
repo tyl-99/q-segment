@@ -1,0 +1,57 @@
+{
+  "experiment": "01_verify",
+  "date": "2026-10-11T00:23:41+00:00",
+  "seed": 1,
+  "versions": {
+    "qiskit": "2.3.0",
+    "numpy": "2.4.2"
+  },
+  "checks": [
+    {
+      "check": "problem size",
+      "pass": true,
+      "detail": "128 partitions, 7 free systems"
+    },
+    {
+      "check": "optimum cost is 26 and unique",
+      "pass": true,
+      "detail": "min 26, count at min 1, worst 60, mean 43.5"
+    },
+    {
+      "check": "optimal partition as expected",
+      "pass": true,
+      "detail": "{'A': ['nurse', 'mri', 'portal', 'email'], 'B': ['pacs', 'pharm', 'ehr', 'billing']}"
+    },
+    {
+      "check": "QUBO equals cost on all 128",
+      "pass": true,
+      "detail": "max difference 0.0; constant 45, 6 nonzero linear, 13 quadratic terms"
+    },
+    {
+      "check": "Ising H + constant equals cost on all 128",
+      "pass": true,
+      "detail": "max difference 0.0e+00; constant 43.5"
+    },
+    {
+      "check": "Hamiltonian has 13 ZZ and 5 Z terms",
+      "pass": true,
+      "detail": "13 ZZ, 5 Z, 7 qubits"
+    },
+    {
+      "check": "Qiskit circuit equals numpy reference, p=1",
+      "pass": true,
+      "detail": "max probability difference 1.8e-16"
+    },
+    {
+      "check": "Qiskit circuit equals numpy reference, p=2",
+      "pass": true,
+      "detail": "max probability difference 1.0e-16"
+    },
+    {
+      "check": "Qiskit circuit equals numpy reference, p=3",
+      "pass": true,
+      "detail": "max probability difference 2.3e-16"
+    }
+  ],
+  "all_pass": true
+}

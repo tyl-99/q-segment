@@ -1,0 +1,146 @@
+{
+  "experiment": "15_classical_wall",
+  "date": "2026-10-12T14:07:50+00:00",
+  "seeds": [
+    2026,
+    2027,
+    2028
+  ],
+  "density": 0.5,
+  "time_limit_seconds": 60,
+  "gurobi_threads": 1,
+  "rows": [
+    {
+      "status": 9,
+      "objective": -502.0,
+      "bound": -532.0,
+      "mip_gap": 0.05976095617529881,
+      "nodes": 4289.0,
+      "solve_seconds": 60.000775249998696,
+      "n": 60,
+      "pairs": 885,
+      "seed": 2026
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": -573.0,
+      "bound": -573.0,
+      "mip_gap": 0.0,
+      "nodes": 2574.0,
+      "solve_seconds": 45.28238045800026,
+      "n": 60,
+      "pairs": 885,
+      "seed": 2027
+    },
+    {
+      "status": "OPTIMAL",
+      "objective": -549.0,
+      "bound": -549.0,
+      "mip_gap": 0.0,
+      "nodes": 2985.0,
+      "solve_seconds": 54.0749909999995,
+      "n": 60,
+      "pairs": 885,
+      "seed": 2028
+    },
+    {
+      "status": 9,
+      "objective": -613.0,
+      "bound": -804.0,
+      "mip_gap": 0.31158238172920066,
+      "nodes": 767.0,
+      "solve_seconds": 60.000225916999625,
+      "n": 80,
+      "pairs": 1580,
+      "seed": 2026
+    },
+    {
+      "status": 9,
+      "objective": -703.0,
+      "bound": -870.0,
+      "mip_gap": 0.2375533428165007,
+      "nodes": 812.0,
+      "solve_seconds": 60.00019375000011,
+      "n": 80,
+      "pairs": 1580,
+      "seed": 2027
+    },
+    {
+      "status": 9,
+      "objective": -803.0,
+      "bound": -1020.0,
+      "mip_gap": 0.27023661270236615,
+      "nodes": 765.0,
+      "solve_seconds": 60.000263040999926,
+      "n": 80,
+      "pairs": 1580,
+      "seed": 2028
+    },
+    {
+      "status": 9,
+      "objective": -1215.0,
+      "bound": -1527.0,
+      "mip_gap": 0.25679012345679014,
+      "nodes": 74732.0,
+      "solve_seconds": 60.00118454100084,
+      "n": 100,
+      "pairs": 2475,
+      "seed": 2026
+    },
+    {
+      "status": 9,
+      "objective": -1195.0,
+      "bound": -1513.0,
+      "mip_gap": 0.26610878661087867,
+      "nodes": 60427.0,
+      "solve_seconds": 60.00053875000049,
+      "n": 100,
+      "pairs": 2475,
+      "seed": 2027
+    },
+    {
+      "status": 9,
+      "objective": -1075.0,
+      "bound": -1366.0,
+      "mip_gap": 0.27069767441860465,
+      "nodes": 56525.0,
+      "solve_seconds": 60.00031358399974,
+      "n": 100,
+      "pairs": 2475,
+      "seed": 2028
+    },
+    {
+      "status": 9,
+      "objective": -2259.0,
+      "bound": -2892.0,
+      "mip_gap": 0.28021248339973437,
+      "nodes": 29689.0,
+      "solve_seconds": 60.00044337500003,
+      "n": 150,
+      "pairs": 5587,
+      "seed": 2026
+    },
+    {
+      "status": 9,
+      "objective": -1846.0,
+      "bound": -2434.0,
+      "mip_gap": 0.31852654387865653,
+      "nodes": 33060.0,
+      "solve_seconds": 60.00038316700011,
+      "n": 150,
+      "pairs": 5587,
+      "seed": 2027
+    },
+    {
+      "status": 9,
+      "objective": -2358.0,
+      "bound": -2998.0,
+      "mip_gap": 0.2714164546225615,
+      "nodes": 34449.0,
+      "solve_seconds": 60.00033683299989,
+      "n": 150,
+      "pairs": 5587,
+      "seed": 2028
+    }
+  ]
+}

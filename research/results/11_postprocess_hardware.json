@@ -1,0 +1,824 @@
+{
+  "random_starts": {
+    "start_cost": 43.5,
+    "success_rate": 0.5625,
+    "mean_final_cost": 28.21875,
+    "mean_evals_per_start": 24.953125,
+    "mean_moves": 2.421875,
+    "evals_per_success": 44.361111111111114
+  },
+  "jobs": [
+    {
+      "p": 1,
+      "sets": 20,
+      "rows": [
+        {
+          "seed": 2035,
+          "hardware": {
+            "start_cost": 37.4423828125,
+            "success_rate": 0.5908203125,
+            "mean_final_cost": 28.182373046875,
+            "mean_evals_per_start": 20.55419921875,
+            "mean_moves": 1.79345703125,
+            "evals_per_success": 34.789256198347104
+          },
+          "ideal": {
+            "start_cost": 36.258608896973804,
+            "success_rate": 0.5800787528631435,
+            "mean_final_cost": 28.206582743826175,
+            "mean_evals_per_start": 19.86578797287191,
+            "mean_moves": 1.69511256755313,
+            "evals_per_success": 34.246708528486295
+          },
+          "hardware_p_best": 0.07177734375
+        },
+        {
+          "seed": 2043,
+          "hardware": {
+            "start_cost": 37.2783203125,
+            "success_rate": 0.56396484375,
+            "mean_final_cost": 28.271484375,
+            "mean_evals_per_start": 20.68408203125,
+            "mean_moves": 1.81201171875,
+            "evals_per_success": 36.67619047619048
+          },
+          "ideal": {
+            "start_cost": 36.26103319050317,
+            "success_rate": 0.5806601942938119,
+            "mean_final_cost": 28.20616303468713,
+            "mean_evals_per_start": 19.811915120480656,
+            "mean_moves": 1.6874164457829508,
+            "evals_per_success": 34.11963712197551
+          },
+          "hardware_p_best": 0.052978515625
+        },
+        {
+          "seed": 2036,
+          "hardware": {
+            "start_cost": 37.369140625,
+            "success_rate": 0.59375,
+            "mean_final_cost": 28.16455078125,
+            "mean_evals_per_start": 20.44482421875,
+            "mean_moves": 1.77783203125,
+            "evals_per_success": 34.43338815789474
+          },
+          "ideal": {
+            "start_cost": 36.239185359586216,
+            "success_rate": 0.5799265136648194,
+            "mean_final_cost": 28.207206095874188,
+            "mean_evals_per_start": 19.949591229252505,
+            "mean_moves": 1.7070844613217862,
+            "evals_per_success": 34.40020547290029
+          },
+          "hardware_p_best": 0.06298828125
+        },
+        {
+          "seed": 2033,
+          "hardware": {
+            "start_cost": 37.363037109375,
+            "success_rate": 0.5927734375,
+            "mean_final_cost": 28.157470703125,
+            "mean_evals_per_start": 20.655029296875,
+            "mean_moves": 1.807861328125,
+            "evals_per_success": 34.84472817133443
+          },
+          "ideal": {
+            "start_cost": 36.23917486198812,
+            "success_rate": 0.5799848932048857,
+            "mean_final_cost": 28.207017578509394,
+            "mean_evals_per_start": 19.918771216448967,
+            "mean_moves": 1.702681602349852,
+            "evals_per_success": 34.34360351419094
+          },
+          "hardware_p_best": 0.05810546875
+        },
+        {
+          "seed": 2040,
+          "hardware": {
+            "start_cost": 37.466552734375,
+            "success_rate": 0.591796875,
+            "mean_final_cost": 28.1650390625,
+            "mean_evals_per_start": 20.66015625,
+            "mean_moves": 1.80859375,
+            "evals_per_success": 34.91089108910891
+          },
+          "ideal": {
+            "start_cost": 36.23942732213306,
+            "success_rate": 0.5804049556406535,
+            "mean_final_cost": 28.20655947681498,
+            "mean_evals_per_start": 19.86859159971617,
+            "mean_moves": 1.695513085673738,
+            "evals_per_success": 34.232291448623364
+          },
+          "hardware_p_best": 0.0576171875
+        },
+        {
+          "seed": 2044,
+          "hardware": {
+            "start_cost": 37.363037109375,
+            "success_rate": 0.583984375,
+            "mean_final_cost": 28.2353515625,
+            "mean_evals_per_start": 20.490966796875,
+            "mean_moves": 1.784423828125,
+            "evals_per_success": 35.08821070234114
+          },
+          "ideal": {
+            "start_cost": 36.23582183689722,
+            "success_rate": 0.580221979294014,
+            "mean_final_cost": 28.2068544634629,
+            "mean_evals_per_start": 19.91690103983267,
+            "mean_moves": 1.70241443426181,
+            "evals_per_success": 34.32634707162695
+          },
+          "hardware_p_best": 0.06689453125
+        },
+        {
+          "seed": 2032,
+          "hardware": {
+            "start_cost": 37.223388671875,
+            "success_rate": 0.588623046875,
+            "mean_final_cost": 28.177734375,
+            "mean_evals_per_start": 20.482421875,
+            "mean_moves": 1.783203125,
+            "evals_per_success": 34.797179593529656
+          },
+          "ideal": {
+            "start_cost": 36.235723106743606,
+            "success_rate": 0.5803612130578643,
+            "mean_final_cost": 28.206674892255066,
+            "mean_evals_per_start": 19.898666648924312,
+            "mean_moves": 1.6998095212749018,
+            "evals_per_success": 34.28669284096409
+          },
+          "hardware_p_best": 0.068603515625
+        },
+        {
+          "seed": 2026,
+          "hardware": {
+            "start_cost": 37.37939453125,
+            "success_rate": 0.60546875,
+            "mean_final_cost": 28.10302734375,
+            "mean_evals_per_start": 20.70458984375,
+            "mean_moves": 1.81494140625,
+            "evals_per_success": 34.19596774193548
+          },
+          "ideal": {
+            "start_cost": 36.24049182810129,
+            "success_rate": 0.579880881588392,
+            "mean_final_cost": 28.207272195136074,
+            "mean_evals_per_start": 19.958090055307267,
+            "mean_moves": 1.7082985793296093,
+            "evals_per_success": 34.41756865761581
+          },
+          "hardware_p_best": 0.066162109375
+        },
+        {
+          "seed": 2045,
+          "hardware": {
+            "start_cost": 37.296630859375,
+            "success_rate": 0.59423828125,
+            "mean_final_cost": 28.112548828125,
+            "mean_evals_per_start": 20.576416015625,
+            "mean_moves": 1.796630859375,
+            "evals_per_success": 34.626540673788
+          },
+          "ideal": {
+            "start_cost": 36.23786719625008,
+            "success_rate": 0.5805390493365334,
+            "mean_final_cost": 28.2064396302496,
+            "mean_evals_per_start": 19.871778722272072,
+            "mean_moves": 1.6959683888960104,
+            "evals_per_success": 34.22987436414906
+          },
+          "hardware_p_best": 0.069580078125
+        },
+        {
+          "seed": 2041,
+          "hardware": {
+            "start_cost": 37.361572265625,
+            "success_rate": 0.5927734375,
+            "mean_final_cost": 28.169677734375,
+            "mean_evals_per_start": 20.6943359375,
+            "mean_moves": 1.8134765625,
+            "evals_per_success": 34.911037891268535
+          },
+          "ideal": {
+            "start_cost": 36.32340391125635,
+            "success_rate": 0.5784739810429125,
+            "mean_final_cost": 28.208731581876407,
+            "mean_evals_per_start": 20.148216113691667,
+            "mean_moves": 1.735459444813095,
+            "evals_per_success": 34.82994356525264
+          },
+          "hardware_p_best": 0.054931640625
+        },
+        {
+          "seed": 2042,
+          "hardware": {
+            "start_cost": 37.07568359375,
+            "success_rate": 0.567626953125,
+            "mean_final_cost": 28.272705078125,
+            "mean_evals_per_start": 20.62939453125,
+            "mean_moves": 1.80419921875,
+            "evals_per_success": 36.34322580645161
+          },
+          "ideal": {
+            "start_cost": 36.23661445265977,
+            "success_rate": 0.5804811779881194,
+            "mean_final_cost": 28.20652379564423,
+            "mean_evals_per_start": 19.88890800538742,
+            "mean_moves": 1.6984154293410603,
+            "evals_per_success": 34.262795693600395
+          },
+          "hardware_p_best": 0.048583984375
+        },
+        {
+          "seed": 2027,
+          "hardware": {
+            "start_cost": 37.212646484375,
+            "success_rate": 0.578125,
+            "mean_final_cost": 28.185546875,
+            "mean_evals_per_start": 20.72509765625,
+            "mean_moves": 1.81787109375,
+            "evals_per_success": 35.848817567567565
+          },
+          "ideal": {
+            "start_cost": 36.26949138663777,
+            "success_rate": 0.5807711543596445,
+            "mean_final_cost": 28.20602646230386,
+            "mean_evals_per_start": 19.796196387894305,
+            "mean_moves": 1.6851709125563292,
+            "evals_per_success": 34.08605306804794
+          },
+          "hardware_p_best": 0.05224609375
+        },
+        {
+          "seed": 2038,
+          "hardware": {
+            "start_cost": 37.21533203125,
+            "success_rate": 0.572265625,
+            "mean_final_cost": 28.2236328125,
+            "mean_evals_per_start": 20.80029296875,
+            "mean_moves": 1.82861328125,
+            "evals_per_success": 36.34726962457338
+          },
+          "ideal": {
+            "start_cost": 36.23567018076954,
+            "success_rate": 0.5802143524002621,
+            "mean_final_cost": 28.2068414172844,
+            "mean_evals_per_start": 19.9088542552545,
+            "mean_moves": 1.7012648936077859,
+            "evals_per_success": 34.31292964900726
+          },
+          "hardware_p_best": 0.049072265625
+        },
+        {
+          "seed": 2028,
+          "hardware": {
+            "start_cost": 37.312255859375,
+            "success_rate": 0.562255859375,
+            "mean_final_cost": 28.269775390625,
+            "mean_evals_per_start": 20.77294921875,
+            "mean_moves": 1.82470703125,
+            "evals_per_success": 36.94572297003908
+          },
+          "ideal": {
+            "start_cost": 36.23618984983779,
+            "success_rate": 0.5804140890269899,
+            "mean_final_cost": 28.206599529552236,
+            "mean_evals_per_start": 19.887232541833967,
+            "mean_moves": 1.6981760774048524,
+            "evals_per_success": 34.263869395681034
+          },
+          "hardware_p_best": 0.049560546875
+        },
+        {
+          "seed": 2031,
+          "hardware": {
+            "start_cost": 37.1865234375,
+            "success_rate": 0.60302734375,
+            "mean_final_cost": 28.131103515625,
+            "mean_evals_per_start": 20.3525390625,
+            "mean_moves": 1.7646484375,
+            "evals_per_success": 33.75060728744939
+          },
+          "ideal": {
+            "start_cost": 36.23737675109736,
+            "success_rate": 0.5803879204541741,
+            "mean_final_cost": 28.206604532203514,
+            "mean_evals_per_start": 19.87842586716706,
+            "mean_moves": 1.6969179810238662,
+            "evals_per_success": 34.250240514329604
+          },
+          "hardware_p_best": 0.064208984375
+        },
+        {
+          "seed": 2030,
+          "hardware": {
+            "start_cost": 37.2470703125,
+            "success_rate": 0.574951171875,
+            "mean_final_cost": 28.203125,
+            "mean_evals_per_start": 20.750732421875,
+            "mean_moves": 1.821533203125,
+            "evals_per_success": 36.09129511677283
+          },
+          "ideal": {
+            "start_cost": 36.33248782662095,
+            "success_rate": 0.579686062424587,
+            "mean_final_cost": 28.205792797548607,
+            "mean_evals_per_start": 19.864401348651207,
+            "mean_moves": 1.694914478378744,
+            "evals_per_success": 34.26751587845089
+          },
+          "hardware_p_best": 0.058837890625
+        },
+        {
+          "seed": 2037,
+          "hardware": {
+            "start_cost": 37.29443359375,
+            "success_rate": 0.59814453125,
+            "mean_final_cost": 28.138427734375,
+            "mean_evals_per_start": 20.537109375,
+            "mean_moves": 1.791015625,
+            "evals_per_success": 34.33469387755102
+          },
+          "ideal": {
+            "start_cost": 36.25013023884101,
+            "success_rate": 0.5800498538820636,
+            "mean_final_cost": 28.207115916199974,
+            "mean_evals_per_start": 19.980439177449675,
+            "mean_moves": 1.7114913110642396,
+            "evals_per_success": 34.44607225349309
+          },
+          "hardware_p_best": 0.06787109375
+        },
+        {
+          "seed": 2029,
+          "hardware": {
+            "start_cost": 37.353271484375,
+            "success_rate": 0.572265625,
+            "mean_final_cost": 28.23583984375,
+            "mean_evals_per_start": 20.942138671875,
+            "mean_moves": 1.848876953125,
+            "evals_per_success": 36.595136518771334
+          },
+          "ideal": {
+            "start_cost": 36.25216772610286,
+            "success_rate": 0.5798589247175003,
+            "mean_final_cost": 28.20738701466455,
+            "mean_evals_per_start": 19.997292798912916,
+            "mean_moves": 1.7138989712732742,
+            "evals_per_success": 34.48647929089879
+          },
+          "hardware_p_best": 0.043212890625
+        },
+        {
+          "seed": 2039,
+          "hardware": {
+            "start_cost": 37.22412109375,
+            "success_rate": 0.596435546875,
+            "mean_final_cost": 28.1708984375,
+            "mean_evals_per_start": 20.309814453125,
+            "mean_moves": 1.758544921875,
+            "evals_per_success": 34.05198526401965
+          },
+          "ideal": {
+            "start_cost": 36.313092910077295,
+            "success_rate": 0.5807460313916631,
+            "mean_final_cost": 28.20581242333532,
+            "mean_evals_per_start": 19.763236401959986,
+            "mean_moves": 1.6804623431371408,
+            "evals_per_success": 34.0307730637446
+          },
+          "hardware_p_best": 0.068359375
+        },
+        {
+          "seed": 2034,
+          "hardware": {
+            "start_cost": 37.204345703125,
+            "success_rate": 0.5546875,
+            "mean_final_cost": 28.3134765625,
+            "mean_evals_per_start": 20.619140625,
+            "mean_moves": 1.802734375,
+            "evals_per_success": 37.17253521126761
+          },
+          "ideal": {
+            "start_cost": 36.23961796808918,
+            "success_rate": 0.5803901593663745,
+            "mean_final_cost": 28.20664440772271,
+            "mean_evals_per_start": 19.923127427562193,
+            "mean_moves": 1.70330391822317,
+            "evals_per_success": 34.327128236138144
+          },
+          "hardware_p_best": 0.048828125
+        }
+      ]
+    },
+    {
+      "p": 2,
+      "sets": 20,
+      "rows": [
+        {
+          "seed": 2031,
+          "hardware": {
+            "start_cost": 35.528564453125,
+            "success_rate": 0.5439453125,
+            "mean_final_cost": 28.41259765625,
+            "mean_evals_per_start": 18.14111328125,
+            "mean_moves": 1.44873046875,
+            "evals_per_success": 33.35098743267505
+          },
+          "ideal": {
+            "start_cost": 33.26136585528947,
+            "success_rate": 0.5919686561407187,
+            "mean_final_cost": 28.107139375252952,
+            "mean_evals_per_start": 16.524239065026613,
+            "mean_moves": 1.217748437860945,
+            "evals_per_success": 27.914043917045813
+          },
+          "hardware_p_best": 0.09619140625
+        },
+        {
+          "seed": 2032,
+          "hardware": {
+            "start_cost": 35.75146484375,
+            "success_rate": 0.602783203125,
+            "mean_final_cost": 28.17724609375,
+            "mean_evals_per_start": 19.708251953125,
+            "mean_moves": 1.672607421875,
+            "evals_per_success": 32.69542324827866
+          },
+          "ideal": {
+            "start_cost": 33.34197524367494,
+            "success_rate": 0.5930148732153602,
+            "mean_final_cost": 28.12189807386533,
+            "mean_evals_per_start": 16.644396655945197,
+            "mean_moves": 1.2349138079921713,
+            "evals_per_success": 28.067418555117072
+          },
+          "hardware_p_best": 0.08203125
+        },
+        {
+          "seed": 2034,
+          "hardware": {
+            "start_cost": 35.6904296875,
+            "success_rate": 0.61181640625,
+            "mean_final_cost": 28.10205078125,
+            "mean_evals_per_start": 19.626220703125,
+            "mean_moves": 1.660888671875,
+            "evals_per_success": 32.07861133280128
+          },
+          "ideal": {
+            "start_cost": 33.207637206541065,
+            "success_rate": 0.5910099699911499,
+            "mean_final_cost": 28.093552660765774,
+            "mean_evals_per_start": 16.4086534042605,
+            "mean_moves": 1.201236200608643,
+            "evals_per_success": 27.763750592069055
+          },
+          "hardware_p_best": 0.088623046875
+        },
+        {
+          "seed": 2045,
+          "hardware": {
+            "start_cost": 35.768798828125,
+            "success_rate": 0.5947265625,
+            "mean_final_cost": 28.215576171875,
+            "mean_evals_per_start": 19.838134765625,
+            "mean_moves": 1.691162109375,
+            "evals_per_success": 33.356732348111656
+          },
+          "ideal": {
+            "start_cost": 33.225958003967776,
+            "success_rate": 0.5939008671811763,
+            "mean_final_cost": 28.090386208936085,
+            "mean_evals_per_start": 16.512927293085674,
+            "mean_moves": 1.2161324704408107,
+            "evals_per_success": 27.804181144676146
+          },
+          "hardware_p_best": 0.0830078125
+        },
+        {
+          "seed": 2040,
+          "hardware": {
+            "start_cost": 36.219482421875,
+            "success_rate": 0.591796875,
+            "mean_final_cost": 28.283447265625,
+            "mean_evals_per_start": 19.6826171875,
+            "mean_moves": 1.6689453125,
+            "evals_per_success": 33.259075907590756
+          },
+          "ideal": {
+            "start_cost": 33.48604899532276,
+            "success_rate": 0.5950686571202212,
+            "mean_final_cost": 28.11155950723532,
+            "mean_evals_per_start": 16.51835632934948,
+            "mean_moves": 1.2169080470499258,
+            "evals_per_success": 27.758740326349084
+          },
+          "hardware_p_best": 0.06982421875
+        },
+        {
+          "seed": 2044,
+          "hardware": {
+            "start_cost": 36.2294921875,
+            "success_rate": 0.556640625,
+            "mean_final_cost": 28.3349609375,
+            "mean_evals_per_start": 18.74951171875,
+            "mean_moves": 1.53564453125,
+            "evals_per_success": 33.68333333333333
+          },
+          "ideal": {
+            "start_cost": 33.57096937307536,
+            "success_rate": 0.5940070076099235,
+            "mean_final_cost": 28.093076864561226,
+            "mean_evals_per_start": 16.796986357053978,
+            "mean_moves": 1.2567123367219968,
+            "evals_per_success": 28.27742121198061
+          },
+          "hardware_p_best": 0.102783203125
+        },
+        {
+          "seed": 2035,
+          "hardware": {
+            "start_cost": 36.11572265625,
+            "success_rate": 0.6044921875,
+            "mean_final_cost": 28.113037109375,
+            "mean_evals_per_start": 19.26220703125,
+            "mean_moves": 1.60888671875,
+            "evals_per_success": 31.865105008077546
+          },
+          "ideal": {
+            "start_cost": 33.67387638619664,
+            "success_rate": 0.5950961237841732,
+            "mean_final_cost": 28.076261628044286,
+            "mean_evals_per_start": 16.765442265592164,
+            "mean_moves": 1.2522060379417375,
+            "evals_per_success": 28.17266252547896
+          },
+          "hardware_p_best": 0.079345703125
+        },
+        {
+          "seed": 2038,
+          "hardware": {
+            "start_cost": 36.09912109375,
+            "success_rate": 0.591552734375,
+            "mean_final_cost": 28.17822265625,
+            "mean_evals_per_start": 19.086181640625,
+            "mean_moves": 1.583740234375,
+            "evals_per_success": 32.26454808089146
+          },
+          "ideal": {
+            "start_cost": 33.621526531293455,
+            "success_rate": 0.5901148564104972,
+            "mean_final_cost": 28.113927137254766,
+            "mean_evals_per_start": 16.795535039880853,
+            "mean_moves": 1.256505005697265,
+            "evals_per_success": 28.46146789464575
+          },
+          "hardware_p_best": 0.077392578125
+        },
+        {
+          "seed": 2029,
+          "hardware": {
+            "start_cost": 36.39697265625,
+            "success_rate": 0.595458984375,
+            "mean_final_cost": 28.208984375,
+            "mean_evals_per_start": 19.8740234375,
+            "mean_moves": 1.6962890625,
+            "evals_per_success": 33.3759737597376
+          },
+          "ideal": {
+            "start_cost": 33.73643831780368,
+            "success_rate": 0.5965229560307814,
+            "mean_final_cost": 28.105940474033964,
+            "mean_evals_per_start": 16.796499444066768,
+            "mean_moves": 1.2566427777238243,
+            "evals_per_success": 28.15733958644174
+          },
+          "hardware_p_best": 0.072509765625
+        },
+        {
+          "seed": 2037,
+          "hardware": {
+            "start_cost": 36.31884765625,
+            "success_rate": 0.55517578125,
+            "mean_final_cost": 28.339599609375,
+            "mean_evals_per_start": 18.8486328125,
+            "mean_moves": 1.5498046875,
+            "evals_per_success": 33.95074758135444
+          },
+          "ideal": {
+            "start_cost": 33.61508962814038,
+            "success_rate": 0.5968553618031827,
+            "mean_final_cost": 28.085897493163696,
+            "mean_evals_per_start": 16.81343172937099,
+            "mean_moves": 1.259061675624427,
+            "evals_per_success": 28.170027121102315
+          },
+          "hardware_p_best": 0.091796875
+        },
+        {
+          "seed": 2030,
+          "hardware": {
+            "start_cost": 36.29345703125,
+            "success_rate": 0.5771484375,
+            "mean_final_cost": 28.2822265625,
+            "mean_evals_per_start": 19.427978515625,
+            "mean_moves": 1.632568359375,
+            "evals_per_success": 33.66201353637902
+          },
+          "ideal": {
+            "start_cost": 33.70615159592738,
+            "success_rate": 0.5974830445445503,
+            "mean_final_cost": 28.095984865211705,
+            "mean_evals_per_start": 17.149059767884882,
+            "mean_moves": 1.3070085382692687,
+            "evals_per_success": 28.702169751038337
+          },
+          "hardware_p_best": 0.05859375
+        },
+        {
+          "seed": 2026,
+          "hardware": {
+            "start_cost": 36.0390625,
+            "success_rate": 0.578369140625,
+            "mean_final_cost": 28.267578125,
+            "mean_evals_per_start": 19.4296875,
+            "mean_moves": 1.6328125,
+            "evals_per_success": 33.59392148585901
+          },
+          "ideal": {
+            "start_cost": 33.74347982136929,
+            "success_rate": 0.5910642264924769,
+            "mean_final_cost": 28.13550356991111,
+            "mean_evals_per_start": 17.270170864758025,
+            "mean_moves": 1.3243101235368608,
+            "evals_per_success": 29.21877198903331
+          },
+          "hardware_p_best": 0.059814453125
+        },
+        {
+          "seed": 2036,
+          "hardware": {
+            "start_cost": 36.4638671875,
+            "success_rate": 0.589111328125,
+            "mean_final_cost": 28.181884765625,
+            "mean_evals_per_start": 19.142578125,
+            "mean_moves": 1.591796875,
+            "evals_per_success": 32.493990882718606
+          },
+          "ideal": {
+            "start_cost": 33.93346641911863,
+            "success_rate": 0.6053143588507761,
+            "mean_final_cost": 28.00322420416198,
+            "mean_evals_per_start": 16.842037059675008,
+            "mean_moves": 1.2631481513821443,
+            "evals_per_success": 27.823620592200353
+          },
+          "hardware_p_best": 0.076416015625
+        },
+        {
+          "seed": 2043,
+          "hardware": {
+            "start_cost": 36.623046875,
+            "success_rate": 0.554443359375,
+            "mean_final_cost": 28.333984375,
+            "mean_evals_per_start": 18.990478515625,
+            "mean_moves": 1.570068359375,
+            "evals_per_success": 34.2514310876266
+          },
+          "ideal": {
+            "start_cost": 34.068292215474614,
+            "success_rate": 0.5961779029069152,
+            "mean_final_cost": 28.112751763405452,
+            "mean_evals_per_start": 16.97761813369334,
+            "mean_moves": 1.2825168762419057,
+            "evals_per_success": 28.477436099043338
+          },
+          "hardware_p_best": 0.09619140625
+        },
+        {
+          "seed": 2033,
+          "hardware": {
+            "start_cost": 36.52978515625,
+            "success_rate": 0.57421875,
+            "mean_final_cost": 28.29638671875,
+            "mean_evals_per_start": 19.4365234375,
+            "mean_moves": 1.6337890625,
+            "evals_per_success": 33.84863945578231
+          },
+          "ideal": {
+            "start_cost": 34.14786536810499,
+            "success_rate": 0.5993899718359661,
+            "mean_final_cost": 28.082173312885015,
+            "mean_evals_per_start": 17.490142727320357,
+            "mean_moves": 1.35573467533148,
+            "evals_per_success": 29.17990548581759
+          },
+          "hardware_p_best": 0.056640625
+        },
+        {
+          "seed": 2042,
+          "hardware": {
+            "start_cost": 37.14453125,
+            "success_rate": 0.594970703125,
+            "mean_final_cost": 28.09130859375,
+            "mean_evals_per_start": 20.371337890625,
+            "mean_moves": 1.767333984375,
+            "evals_per_success": 34.23922855970456
+          },
+          "ideal": {
+            "start_cost": 35.035412562434644,
+            "success_rate": 0.5852689079504891,
+            "mean_final_cost": 28.143925116642595,
+            "mean_evals_per_start": 18.101758203277175,
+            "mean_moves": 1.443108314753882,
+            "evals_per_success": 30.928959248264892
+          },
+          "hardware_p_best": 0.073974609375
+        },
+        {
+          "seed": 2039,
+          "hardware": {
+            "start_cost": 37.880126953125,
+            "success_rate": 0.566162109375,
+            "mean_final_cost": 28.1650390625,
+            "mean_evals_per_start": 20.607177734375,
+            "mean_moves": 1.801025390625,
+            "evals_per_success": 36.398016386373435
+          },
+          "ideal": {
+            "start_cost": 34.91533173331549,
+            "success_rate": 0.5875855114660022,
+            "mean_final_cost": 28.13691957898378,
+            "mean_evals_per_start": 18.141858556720987,
+            "mean_moves": 1.4488369366744271,
+            "evals_per_success": 30.87526530641945
+          },
+          "hardware_p_best": 0.03369140625
+        },
+        {
+          "seed": 2041,
+          "hardware": {
+            "start_cost": 37.748779296875,
+            "success_rate": 0.572021484375,
+            "mean_final_cost": 28.1123046875,
+            "mean_evals_per_start": 20.514892578125,
+            "mean_moves": 1.787841796875,
+            "evals_per_success": 35.863849765258216
+          },
+          "ideal": {
+            "start_cost": 35.12138314454816,
+            "success_rate": 0.5880879044417049,
+            "mean_final_cost": 28.108250599197255,
+            "mean_evals_per_start": 18.152615918682535,
+            "mean_moves": 1.4503737026689336,
+            "evals_per_success": 30.86718121828323
+          },
+          "hardware_p_best": 0.04052734375
+        },
+        {
+          "seed": 2027,
+          "hardware": {
+            "start_cost": 37.572021484375,
+            "success_rate": 0.516845703125,
+            "mean_final_cost": 28.668701171875,
+            "mean_evals_per_start": 20.564453125,
+            "mean_moves": 1.794921875,
+            "evals_per_success": 39.78837978271138
+          },
+          "ideal": {
+            "start_cost": 35.75206915643659,
+            "success_rate": 0.5848802114607434,
+            "mean_final_cost": 28.1607072185782,
+            "mean_evals_per_start": 19.21550768626974,
+            "mean_moves": 1.60221538375282,
+            "evals_per_success": 32.85374904081443
+          },
+          "hardware_p_best": 0.052734375
+        },
+        {
+          "seed": 2028,
+          "hardware": {
+            "start_cost": 37.69384765625,
+            "success_rate": 0.5400390625,
+            "mean_final_cost": 28.484375,
+            "mean_evals_per_start": 21.0224609375,
+            "mean_moves": 1.8603515625,
+            "evals_per_success": 38.92766726943942
+          },
+          "ideal": {
+            "start_cost": 35.939730131125685,
+            "success_rate": 0.5800311428903155,
+            "mean_final_cost": 28.19730073280264,
+            "mean_evals_per_start": 19.72941572506209,
+            "mean_moves": 1.6756308178660126,
+            "evals_per_success": 34.014407617407784
+          },
+          "hardware_p_best": 0.050048828125
+        }
+      ]
+    }
+  ]
+}

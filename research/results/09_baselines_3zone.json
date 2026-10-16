@@ -1,0 +1,228 @@
+{
+  "experiment": "09_baselines_3zone",
+  "date": "2026-10-12T10:46:23+00:00",
+  "K": 3,
+  "budget": 4096,
+  "seeds": [
+    2026,
+    2027,
+    2028
+  ],
+  "settings": {
+    "annealing": {
+      "steps": 200,
+      "t_start": 10.0,
+      "t_end": 0.2
+    }
+  },
+  "machine": {
+    "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+    "python": "3.13.11",
+    "numpy": "2.4.2"
+  },
+  "brute_force": {
+    "best_cost": 25,
+    "optimal_indices": [
+      1109,
+      2134
+    ],
+    "worst_cost": 60,
+    "mean_cost": 43.0,
+    "evals": 2187,
+    "seconds": [
+      0.012666499999966163,
+      0.010751958000014383,
+      0.009163875000012922
+    ]
+  },
+  "gurobi": {
+    "matches_brute_force": true,
+    "runs": [
+      {
+        "status": "OPTIMAL",
+        "objective": 25.0,
+        "index": 2134,
+        "mip_gap": 0.0,
+        "nodes": 1.0,
+        "gurobi_runtime_seconds": 0.012806892395019531,
+        "setup_seconds": 0.014612124999985099,
+        "solve_seconds": 0.01389870799999926,
+        "partition_cost": 25
+      },
+      {
+        "status": "OPTIMAL",
+        "objective": 25.0,
+        "index": 2134,
+        "mip_gap": 0.0,
+        "nodes": 1.0,
+        "gurobi_runtime_seconds": 0.0013339519500732422,
+        "setup_seconds": 0.0008197090000408025,
+        "solve_seconds": 0.0013483750000204964,
+        "partition_cost": 25
+      },
+      {
+        "status": "OPTIMAL",
+        "objective": 25.0,
+        "index": 2134,
+        "mip_gap": 0.0,
+        "nodes": 1.0,
+        "gurobi_runtime_seconds": 0.0010869503021240234,
+        "setup_seconds": 0.0006367920000229788,
+        "solve_seconds": 0.0010984999999550382,
+        "partition_cost": 25
+      }
+    ]
+  },
+  "runs": {
+    "random": [
+      {
+        "best_cost": 25,
+        "best_index": 2134,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 456,
+        "first_hit_seconds": 0.0026276670000129343,
+        "seconds": 0.01816266700001279,
+        "seed": 2026,
+        "best_within": {
+          "10": 33,
+          "100": 29,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 381,
+        "first_hit_seconds": 0.001686874999961674,
+        "seconds": 0.017603749999977936,
+        "seed": 2027,
+        "best_within": {
+          "10": 28,
+          "100": 28,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 2134,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 35,
+        "first_hit_seconds": 0.00018154200000708443,
+        "seconds": 0.01758887500000128,
+        "seed": 2028,
+        "best_within": {
+          "10": 34,
+          "100": 25,
+          "1000": 25,
+          "4096": 25
+        }
+      }
+    ],
+    "greedy": [
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 89,
+        "first_hit_seconds": 0.0004072090000022399,
+        "seconds": 0.018999458999985563,
+        "seed": 2026,
+        "best_within": {
+          "10": 32,
+          "100": 25,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 227,
+        "first_hit_seconds": 0.0010396669999863661,
+        "seconds": 0.024592666999978974,
+        "seed": 2027,
+        "best_within": {
+          "10": 32,
+          "100": 26,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 108,
+        "first_hit_seconds": 0.0009491249999769025,
+        "seconds": 0.020816374999981235,
+        "seed": 2028,
+        "best_within": {
+          "10": 39,
+          "100": 26,
+          "1000": 25,
+          "4096": 25
+        }
+      }
+    ],
+    "annealing": [
+      {
+        "best_cost": 25,
+        "best_index": 2134,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 154,
+        "first_hit_seconds": 0.0018995000000359141,
+        "seconds": 0.029330458000004,
+        "seed": 2026,
+        "best_within": {
+          "10": 33,
+          "100": 27,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 38,
+        "first_hit_seconds": 0.0002455000000054497,
+        "seconds": 0.027254790999961642,
+        "seed": 2027,
+        "best_within": {
+          "10": 32,
+          "100": 25,
+          "1000": 25,
+          "4096": 25
+        }
+      },
+      {
+        "best_cost": 25,
+        "best_index": 1109,
+        "evals": 4096,
+        "hit": true,
+        "first_hit_eval": 84,
+        "first_hit_seconds": 0.00048820900002510825,
+        "seconds": 0.023490041999991718,
+        "seed": 2028,
+        "best_within": {
+          "10": 34,
+          "100": 25,
+          "1000": 25,
+          "4096": 25
+        }
+      }
+    ]
+  }
+}
