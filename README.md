@@ -15,7 +15,7 @@ Every link between two systems has a **traffic** value (how much the business ne
 
 ![Valid answers on ibm_kingston with and without error suppression](research/figures/3zone_error_suppression.png)
 
-- A valid chip readout is the best split **0.94%** of the time (**1.87%** in ideal simulation); post-processing then reaches the best split.
+- The chip **sampled the best split directly**, 4 to 5 times in 4,096 readouts per seed: a valid readout is the best split **0.94%** of the time (**1.87%** in ideal simulation). Post-processing makes finding it more reliable.
 - At **60-150 systems**, Gurobi could not prove the best answer in any of **12 runs** (60 s each).
 
 **Honest conclusion:** today a normal computer is far faster, and we make no speedup claim. Larger networks would need hundreds of qubits with much lower noise (297 qubits at 100 systems; ibm_kingston has 156).
