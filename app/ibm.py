@@ -127,10 +127,13 @@ def _work(job_id, payload):
         if not indices:
             raise RuntimeError("None of the chip's readouts was a valid split. Try again.")
         best_idx = solver.best_after_cleanup(prep, list(indices))
+        measured = solver.measured_details(counts, prep)
+        raw_idx = measured.pop("best_measured_index")
+        if raw_idx is not None and prep["direct"][raw_idx] <= prep["direct"][best_idx] + 1e-9:
+            best_idx = raw_idx  # same cost: keep the chip's own labels so the plan and the bitstring agree
         result = solver.summary(prep, best_idx, {"engine": "ibm-quantum", "backend": chip if not s["dry_run"] else "dry-run",
                                                  "ibm_job_id": ibm_id, "chip_seconds": chip_seconds, "valid_share": round(valid_share, 4),
-                                                 "two_qubit_gates_routed": two_q, "shots": SHOTS,
-                                                 **solver.measured_details(counts, prep)})
+                                                 "two_qubit_gates_routed": two_q, "shots": SHOTS, **measured})
         set_job(job_id, status="done", result=result)
     except solver.NetworkError as err:
         set_job(job_id, status="error", error=str(err))

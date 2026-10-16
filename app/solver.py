@@ -214,7 +214,7 @@ def prepare(payload):
 def summary(prep, best_idx, extra):
     op, direct = prep["op"], prep["direct"]
     return {
-        "qiskit": qiskit.__version__, "zones_requested": prep["K"], "zones": canonical(prep["zones"][best_idx].tolist()),
+        "qiskit": qiskit.__version__, "zones_requested": prep["K"], "zones": prep["zones"][best_idx].tolist(),
         "cost": float(direct[best_idx]), "best_possible": float(direct.min()), "qubits": op.num_qubits,
         "ising_z_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "Z"),
         "ising_zz_terms": sum(1 for p, _, _ in op.to_sparse_list() if p == "ZZ"), "ising_constant": float(prep["const"]),
@@ -253,7 +253,7 @@ def measured_details(counts, prep):
     """Raw chip readouts, before post-processing: the lowest-cost valid bitstring (zone qubits grouped per
     system, first zone first) and the share of all readouts that were an optimal split."""
     n, K, direct = prep["n"], prep["K"], prep["direct"]
-    best_cost, total, best_bits, best_count, optimal = None, 0, None, 0, 0
+    best_cost, total, best_bits, best_count, optimal, best_idx = None, 0, None, 0, 0, None
     for bits, c in counts.items():
         bits = bits.replace(" ", ""); total += c
         bit = lambda q: bits[len(bits) - 1 - q] == "1"
@@ -275,9 +275,9 @@ def measured_details(counts, prep):
         if cost <= float(direct.min()) + 1e-9:
             optimal += c
         if best_cost is None or cost < best_cost - 1e-9 or (abs(cost - best_cost) <= 1e-9 and c > best_count):
-            best_cost, best_bits, best_count = cost, " ".join(groups), c
+            best_cost, best_bits, best_count, best_idx = cost, " ".join(groups), c, idx
     return {"best_measured_bitstring": best_bits, "best_measured_cost": best_cost,
-            "optimal_share": round(optimal / total, 5) if total else 0.0}
+            "optimal_share": round(optimal / total, 5) if total else 0.0, "best_measured_index": best_idx}
 
 
 def run(payload):
