@@ -15,14 +15,16 @@ Every link between two systems has a **traffic** value (how much the business ne
 
 ![Valid answers on ibm_kingston with and without error suppression](research/figures/3zone_error_suppression.png)
 
+![Time to prove the best split as networks grow](research/figures/3zone_runtime_vs_size.png)
+
 - The chip **sampled the best split directly**, 4 to 5 times in 4,096 readouts per seed: a valid readout is the best split **0.94%** of the time (**1.87%** in ideal simulation). Post-processing makes finding it more reliable.
-- At **60-150 systems**, Gurobi could not prove the best answer in any of **12 runs** (60 s each).
+- Proving the best split exactly gets slow fast: **0.7 s** at 20 systems, **11 min** at 40, **2.6 h** at 50 (median of 3 random networks; SCIP, 1 CPU thread, FAU Athene HPC). At **100+ systems** it was not proven within 24 hours.
 
 **Honest conclusion:** today a normal computer is far faster, and we make no speedup claim. Larger networks would need hundreds of qubits with much lower noise (297 qubits at 100 systems; ibm_kingston has 156).
 
 ## What we built vs what we reused
 
-**Reused:** Qiskit (`QAOAAnsatz`, `StatePreparation`, `XXPlusYYGate`, `SparsePauliOp`, `transpile`), Qiskit Aer and IBM Runtime `SamplerV2`, SciPy's COBYLA optimizer, Gurobi for the classical comparison, and the standard QAOA and Max-Cut ideas (Farhi et al. 2014).
+**Reused:** Qiskit (`QAOAAnsatz`, `StatePreparation`, `XXPlusYYGate`, `SparsePauliOp`, `transpile`), Qiskit Aer and IBM Runtime `SamplerV2`, SciPy's COBYLA optimizer, Gurobi and SCIP for the classical comparison, and the standard QAOA and Max-Cut ideas (Farhi et al. 2014).
 
 **Built by us:**
 - The formulation of network microsegmentation as signed Max-3-Cut with traffic and risk per link, and its QUBO and Ising forms (`research/qsegment/formulation.py`).

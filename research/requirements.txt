@@ -9,3 +9,4 @@ pylatexenc==2.10
 jupyter
 # Optional: only for the classical comparison (experiments 02b, 09, 13-16). Needs a Gurobi licence.
 # gurobipy==13.0.3
+# pyscipopt==6.3.0  (only for experiments/18, exact timing runs)
