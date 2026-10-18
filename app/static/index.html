@@ -970,7 +970,7 @@ function ibmDetails(q) {
       <p class="bitnote">Each column is one system: its zone qubits A, B, C from top to bottom, the lit one is its zone. ${esc(state.nodes[0] ? state.nodes[0].name : "The first system")} is fixed in zone A, so it uses no qubits.</p>`;
   }
   return `<details class="more ibm"><summary>IBM run details</summary>
-    <div class="stats">${stat(pct(q.valid, 1) + (q.shots ? ` <small style="font-weight:500;color:var(--muted)">of ${q.shots.toLocaleString()}</small>` : ""), "feasible readouts (one zone per system)")}${stat(pct(q.optimal, 2), "optimal readouts (already the best split)")}${stat(q.bitsCost != null ? String(q.bitsCost) : "—", "cost of the best measured split")}${stat(esc(q.backend || "—"), "IBM chip")}</div>
+    <div class="stats">${stat(pct(q.valid, 1) + (q.shots ? ` <small style="font-weight:500;color:var(--muted)">of ${q.shots.toLocaleString()}</small>` : ""), "feasible readouts (one zone per system)")}${stat(q.shots && q.optimal != null ? Math.round(q.optimal * q.shots).toLocaleString() : pct(q.optimal, 2), "optimal readouts (already the best split)")}${stat(q.bitsCost != null ? String(q.bitsCost) : "—", "cost of the best measured split")}${stat(esc(q.backend || "—"), "IBM chip")}</div>
     <p class="jobid">IBM job <code>${esc(q.jobId || "—")}</code></p>${bits}
   </details>`;
 }
