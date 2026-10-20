@@ -176,6 +176,7 @@ h3 { margin: 16px 0 8px; font-family: var(--display); font-size: 0.76rem; text-t
 .qrow label { width: 58px; flex: none; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .qsel { flex: 1; min-width: 0; border: 1px solid var(--wire); background-color: var(--raised); color: var(--fg); border-radius: 10px; padding: 9px 34px 9px 12px; font-weight: 600; }
 .qsel option { background: var(--surface); color: var(--fg); }
+.tsel { flex: 0 0 auto; width: auto; }
 .qgo { width: 100%; padding: 12px 16px; font-size: 1rem; margin-top: 4px; }
 #qOut:empty { display: none; }
 #qOut { margin-top: 12px; }
@@ -224,7 +225,7 @@ details.more.ibm { margin-top: 14px; }
   <header class="top">
     <div class="brand"><span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Q-Segment"><g class="lg-cell" stroke-width="2.2" stroke-linejoin="round"><polygon points="41.30,7.60 57.75,17.10 57.75,36.10 41.30,45.60 24.85,36.10 24.85,17.10"/><polygon points="19.70,45.00 36.15,54.50 36.15,73.50 19.70,83.00 3.25,73.50 3.25,54.50"/><polygon points="62.90,45.00 79.35,54.50 79.35,73.50 62.90,83.00 46.45,73.50 46.45,54.50"/><polygon points="41.30,82.40 57.75,91.90 57.75,110.90 41.30,120.40 24.85,110.90 24.85,91.90"/></g><g fill="#F2A33A" stroke="#F2A33A" stroke-width="2.2" stroke-linejoin="round"><polygon points="84.50,7.60 100.95,17.10 100.95,36.10 84.50,45.60 68.05,36.10 68.05,17.10"/><polygon points="106.10,45.00 122.55,54.50 122.55,73.50 106.10,83.00 89.65,73.50 89.65,54.50"/><polygon points="84.50,82.40 100.95,91.90 100.95,110.90 84.50,120.40 68.05,110.90 68.05,91.90"/></g></svg></span><span>Q-Segment<small>Network zoning that balances security and business.</small></span></div>
     <span class="grow"></span>
-    <button type="button" class="btn ghost" id="template" title="Load the 8-system hospital example we used in our runs">Load Template</button>
+    <select id="template" class="qsel tsel" aria-label="Load a template" title="Load an example network"><option value="" selected>Load template</option><option value="hospital">Hospital · 8 systems</option><option value="net100">Test network · 100 systems</option><option value="net200">Test network · 200 systems</option><option value="net500">Test network · 500 systems</option></select>
     <button type="button" class="btn ghost" id="clear">Clear</button>
     <button type="button" class="btn ghost icon" id="themeBtn" aria-label="Switch to light mode" title="Switch to light mode"></button>
   </header>
@@ -259,6 +260,9 @@ details.more.ibm { margin-top: 14px; }
               <option value="ibm:ibm_kingston">ibm_kingston (default chip)</option>
               <option value="ibm:ibm_fez">ibm_fez</option>
               <option value="ibm:ibm_marrakesh">ibm_marrakesh</option>
+            </optgroup>
+            <optgroup label="D-Wave · Leap cloud">
+              <option value="dwave">Stride hybrid solver</option>
             </optgroup>
           </select>
         </div>
@@ -563,7 +567,7 @@ const HOSPITAL = {
     ["pharm", "ehr", 5, 0], ["ehr", "billing", 4, 3]],
   fits: { 1: { g: [-0.13553641165836655], b: [0.39876127558471364] }, 2: { g: [0.15342710316629551, -0.3111689889519134], b: [-0.2875350130673109, 0.2742766361878971] } }
 };
-const state = { nodes: [], links: [], K: 0, view: "edit", zsel: null, breach: null, qres: null, server: false, ibm: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
+const state = { nodes: [], links: [], K: 0, view: "edit", zsel: null, breach: null, qres: null, server: false, ibm: false, dwave: false, selected: null, plan: null, tab: "result", p: 1, gammas: [0], betas: [0], fits: null, qaoaNote: "", hover: null };
 let nextId = 1;
 
 const $ = id => document.getElementById(id);
@@ -581,7 +585,26 @@ function loadPreset(name) {
   state.p = 1; state.gammas = state.fits ? state.fits[1].g.slice() : [0.1]; state.betas = state.fits ? state.fits[1].b.slice() : [0.3];
   afterEdit();
 }
-function indexOfId(id) { return state.nodes.findIndex(n => n.id === id); }
+let idxArr = null, idxLen = -1, idxMap = null;
+function indexOfId(id) {
+  if (idxArr !== state.nodes || idxLen !== state.nodes.length) { idxMap = new Map(state.nodes.map((n, i) => [n.id, i])); idxArr = state.nodes; idxLen = state.nodes.length; }
+  const i = idxMap.get(id); return i === undefined ? -1 : i;
+}
+const BIG = 40, isBig = () => state.nodes.length > BIG;
+async function loadBig(name) {
+  const say = t => { $("tab-result").innerHTML = `<div class="empty"><div class="big">Template not loaded</div><p class="note">${esc(t)}</p></div>`; };
+  if (!/^https?:$/.test(location.protocol)) { say("The large test networks load only on the live site."); return; }
+  try {
+    const r = await fetch(`/templates/${name}.json`, { cache: "no-store" });
+    if (!r.ok) throw new Error(String(r.status));
+    const t = await r.json();
+    state.nodes = []; state.links = []; state.plan = null; state.selected = null; state.fits = null; nextId = 1;
+    for (const sys of t.systems) state.nodes.push({ id: nextId++, name: String(sys.name), type: TYPE[sys.type] ? sys.type : "system", x: 0, y: 0 });
+    for (const [a, b, tt, rr] of t.links) state.links.push({ a: a + 1, b: b + 1, t: tt, r: rr });
+    $("qMode").value = "dwave";
+    afterEdit();
+  } catch (e) { say("Could not load that test network."); }
+}
 function model() {
   return makeModel(state.nodes, state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })));
 }
@@ -625,7 +648,34 @@ function startTween() {
   const step = () => { if (!tween) return; renderCanvas(); if (performance.now() - tween.t0 < tween.dur) requestAnimationFrame(step); else { tween = null; renderCanvas(); } };
   requestAnimationFrame(step);
 }
+function renderBigCanvas() {
+  const zoned = isZoned(), plan = zoned ? validPlan() : null, n = state.nodes.length;
+  syncViewTabs();
+  svg.toggleAttribute("hidden", zoned); zsvg.toggleAttribute("hidden", !zoned);
+  document.querySelector(".sidebar").classList.toggle("locked", zoned);
+  const grid = (count, x0, y0, w, h) => {
+    const cols = Math.max(1, Math.round(Math.sqrt(count * w / h))), rows = Math.ceil(count / cols), dx = w / cols, dy = Math.min(h / Math.max(rows, 1), dx * 1.6);
+    return { cols, dx, dy, x0, y0: y0 + (h - rows * dy) / 2, r: Math.max(1.6, Math.min(7, Math.min(dx, dy) * 0.36)) };
+  };
+  const dot = (g, j, col) => `<circle cx="${g.x0 + (j % g.cols + 0.5) * g.dx}" cy="${g.y0 + (Math.floor(j / g.cols) + 0.5) * g.dy}" r="${g.r}" fill="${col}"/>`;
+  let out = "";
+  if (!plan) {
+    const g = grid(n, 30, 64, CW - 60, CH - 90);
+    out += `<text x="${CW / 2}" y="40" text-anchor="middle" font-family="var(--display)" font-size="16" font-weight="700" fill="var(--fg)">${n.toLocaleString()} systems · ${state.links.length.toLocaleString()} links</text>`;
+    for (let j = 0; j < n; j++) out += dot(g, j, "var(--muted)");
+  } else {
+    const used = [...new Set(plan.z)].sort((a, b) => a - b), pad = 16, gap = 14, laneW = (CW - 2 * pad - (used.length - 1) * gap) / used.length;
+    used.forEach((zone, li) => {
+      const x0 = pad + li * (laneW + gap), zc = zoneVar(zone), count = plan.z.filter(z => z === zone).length, g = grid(count, x0 + 10, 60, laneW - 20, CH - 84);
+      out += `<rect x="${x0}" y="12" width="${laneW}" height="${CH - 24}" rx="16" fill="${zc}" fill-opacity="0.07" stroke="${zc}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="7 6"/><text x="${x0 + 16}" y="40" font-family="var(--display)" font-size="16" font-weight="700" fill="${zc}">Zone ${ZN[zone]}<tspan fill="var(--muted)" font-weight="500" font-size="13"> · ${count} systems</tspan></text>`;
+      for (let j = 0; j < count; j++) out += dot(g, j, zc);
+    });
+  }
+  (zoned ? zsvg : svg).innerHTML = out;
+  $("legend").innerHTML = `<span>Each dot is one system. The ${state.links.length.toLocaleString()} links are too many to draw.</span>`;
+}
 function renderCanvas() {
+  if (isBig()) { renderBigCanvas(); return; }
   const zoned = isZoned(), plan = zoned ? validPlan() : null, selObj = zoned ? state.zsel : state.selected;
   syncViewTabs();
   svg.toggleAttribute("hidden", zoned); zsvg.toggleAttribute("hidden", !zoned);
@@ -866,7 +916,8 @@ function afterEditKeep() { state.view = "edit"; state.breach = null; state.plan 
 /* ---------------- panels ---------------- */
 function pairRows(m, idxs) {
   if (!idxs.length) return `<p class="muted">none</p>`;
-  return `<div class="plist">${idxs.map(k => `<div class="prow"><span class="pnames">${esc(m.names[m.A[k]])}<span class="sep">–</span>${esc(m.names[m.B[k]])}</span><span class="pnums"><span class="num t${m.T[k] ? "" : " zero"}">traffic ${m.T[k]}</span><span class="num r${m.R[k] ? "" : " zero"}">risk ${m.R[k]}</span></span></div>`).join("")}</div>`;
+  const more = idxs.length > 40 ? `<p class="muted">and ${(idxs.length - 40).toLocaleString()} more</p>` : "";
+  return `<div class="plist">${idxs.slice(0, 40).map(k => `<div class="prow"><span class="pnames">${esc(m.names[m.A[k]])}<span class="sep">–</span>${esc(m.names[m.B[k]])}</span><span class="pnums"><span class="num t${m.T[k] ? "" : " zero"}">traffic ${m.T[k]}</span><span class="num r${m.R[k] ? "" : " zero"}">risk ${m.R[k]}</span></span></div>`).join("")}</div>${more}`;
 }
 function renderResult() {
   const el = $("tab-result"), m = model(), plan = state.plan;
@@ -875,17 +926,17 @@ function renderResult() {
     el.innerHTML = `<div class="empty"><div class="big">No zones yet</div><p class="note">Flat network: every system can reach every other. Press <b>Segment my network</b> to split it into zones.</p></div>`;
     return;
   }
-  if (m.n > limitK()) { el.innerHTML = `<p class="warn">${m.n} systems is more than the exact search in this page handles for ${state.K} zones (limit ${limitK()}).</p>`; return; }
+  if (m.n > limitK() && !(plan && plan.K === state.K)) { el.innerHTML = `<p class="warn">${m.n} systems is more than the exact search in this page handles for ${state.K} zones (limit ${limitK()}).</p>`; return; }
   if (!plan || plan.K !== state.K) { el.innerHTML = `<p class="muted">Press <b>Segment my network</b>.</p>`; return; }
   const zonesHtml = [...Array(state.K).keys()].map(k => {
     const mem = state.nodes.filter((_, i) => plan.z[i] === k);
-    return mem.length ? `<div class="zcard" style="--zc:${zoneVar(k)}"><h4>Zone ${ZN[k]}<span class="muted">${mem.length} system${mem.length > 1 ? "s" : ""}</span></h4><div class="zchips">${mem.map(n => `<span class="chip">${iconSvg(n.type)}${esc(n.name)}</span>`).join("")}</div></div>` : "";
+    return mem.length ? `<div class="zcard" style="--zc:${zoneVar(k)}"><h4>Zone ${ZN[k]}<span class="muted">${mem.length} system${mem.length > 1 ? "s" : ""}</span></h4><div class="zchips">${mem.slice(0, 24).map(n => `<span class="chip">${iconSvg(n.type)}${esc(n.name)}</span>`).join("")}${mem.length > 24 ? `<span class="chip">+${mem.length - 24} more</span>` : ""}</div></div>` : "";
   }).join("");
   const used = new Set(plan.z).size;
   const fewer = used < plan.K ? `<p class="note zonenote">The best plan here uses only ${used} of the ${plan.K} zones. Another zone would add more firewall rules for busy links than the risk it removes.</p>` : "";
   el.innerHTML = `
     ${fewer}${zonesHtml}
-    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? (state.qres.engine === "ibm" ? `<div class="kpi"><b>${state.qres.chip != null ? state.qres.chip.toFixed(0) + " s" : "—"}</b><span>time on the IBM chip</span></div>` : `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>`) : ""}</div>${state.qres && state.qres.engine === "ibm" ? ibmDetails(state.qres) : ""}
+    <div class="kpis two"><div class="kpi"><b>${plan.rules.length}</b><span>firewall rule${plan.rules.length === 1 ? "" : "s"} to create</span></div>${state.qres ? (state.qres.engine === "dwave" ? `<div class="kpi"><b>${(state.qres.ms / 1000).toFixed(0)} s</b><span>time to answer on D-Wave</span></div>` : state.qres.engine === "ibm" ? `<div class="kpi"><b>${state.qres.chip != null ? state.qres.chip.toFixed(0) + " s" : "—"}</b><span>time on the IBM chip</span></div>` : `<div class="kpi"><b>${state.qres.ms < 10 ? "&lt;0.01 s" : (state.qres.ms / 1000).toFixed(2) + " s"}</b><span>computation time</span></div>`) : ""}</div>${state.qres && state.qres.engine === "ibm" ? ibmDetails(state.qres) : ""}
     <details class="more"><summary>Details</summary>
       <h3>Firewall rules to create <span class="badge bad">${plan.rules.length}</span></h3>${pairRows(m, plan.rules)}
       <h3>Risk still open inside zones <span class="badge warn">${plan.open.length}</span></h3>${pairRows(m, plan.open)}
@@ -925,7 +976,7 @@ $("themeBtn").addEventListener("click", () => {
   applyTheme(theme);
   try { localStorage.setItem("qsegment-theme", theme); } catch (e) {}
 });
-$("template").addEventListener("click", () => loadPreset("hospital"));
+$("template").addEventListener("change", e => { const v = e.target.value; e.target.value = ""; if (v === "hospital") loadPreset("hospital"); else if (v) loadBig(v); });
 $("clear").addEventListener("click", () => { state.K = 0; syncK(); loadPreset("blank"); });
 function addNodeOfType(type, x, y) {
   if (isZoned()) return;
@@ -975,21 +1026,22 @@ function ibmDetails(q) {
   </details>`;
 }
 function syncQuantum() {
-  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
+  const b = $("runQuantum"), n = state.nodes.length, K = +$("qK").value, ibm = $("qMode").value.startsWith("ibm"), dw = $("qMode").value === "dwave", chip = $("qMode").value.split(":")[1] || "";
   const size = Math.pow(K, Math.max(n - 1, 0)), note = $("qIbmNote");
-  $("qCodeRow").hidden = !ibm; note.hidden = !ibm;
-  if (ibm) note.textContent = !state.server ? "Real chip runs work only on the live site." : !state.ibm ? "Real chip runs are not switched on for this site yet." : `Runs on IBM's ${chip}, a 156-qubit Heron chip. Waiting in IBM's queue can take a while.`;
-  const ready = !ibm || (state.server && state.ibm && $("qCode").value.trim().length > 0);
+  $("qCodeRow").hidden = !(ibm || dw); note.hidden = !(ibm || dw);
+  if (dw) note.textContent = !state.server ? "D-Wave runs work only on the live site." : !state.dwave ? "D-Wave runs are not switched on for this site yet." : "Runs on D-Wave's Stride hybrid solver in the Leap cloud. An answer takes about 10 to 60 s.";
+  else if (ibm) note.textContent = !state.server ? "Real chip runs work only on the live site." : !state.ibm ? "Real chip runs are not switched on for this site yet." : `Runs on IBM's ${chip}, a 156-qubit Heron chip. Waiting in IBM's queue can take a while.`;
+  const ready = dw ? state.server && state.dwave && $("qCode").value.trim().length > 0 : !ibm || (state.server && state.ibm && $("qCode").value.trim().length > 0);
   if (b.querySelector(".spin")) return;
-  b.disabled = !(n >= 2 && size <= QLIMIT && ready);
-  b.title = n < 2 ? "Add at least two systems." : size > QLIMIT ? "Too many systems for this demo." : !ready ? (ibm && state.ibm ? "Enter the access code first." : "Real chip runs are not available here.") : ibm ? "Send the circuit to the real IBM chip." : "Run the quantum circuit on the simulator.";
+  b.disabled = !(n >= 2 && (dw || size <= QLIMIT) && ready);
+  b.title = n < 2 ? "Add at least two systems." : !dw && size > QLIMIT ? "Too many systems for this solver. Choose D-Wave Stride." : !ready ? ((ibm && state.ibm) || (dw && state.dwave) ? "Enter the access code first." : dw ? "D-Wave runs are not available here." : "Real chip runs are not available here.") : dw ? "Send the network to D-Wave." : ibm ? "Send the circuit to the real IBM chip." : "Run the quantum circuit on the simulator.";
 }
 $("runQuantum").addEventListener("click", () => {
   const b = $("runQuantum"); if (b.disabled) return;
-  const ibm = $("qMode").value.startsWith("ibm"), chip = $("qMode").value.split(":")[1] || "";
+  const ibm = $("qMode").value.startsWith("ibm"), dw = $("qMode").value === "dwave", chip = $("qMode").value.split(":")[1] || "";
   b.disabled = true; b.innerHTML = `<span class="spin"></span> Running…`;
   state.qres = null; state.plan = null; state.K = 0; renderCanvas();
-  $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span><span class="msg">${ibm ? "Building the circuit…" : "Running the quantum circuit…"}</span></div>`;
+  $("tab-result").innerHTML = `<div class="loading"><span class="spin big"></span><span class="msg">${dw ? "Sending the network to D-Wave…" : ibm ? "Building the circuit…" : "Running the quantum circuit…"}</span></div>`;
   const shown = performance.now(), m = model(), K = +$("qK").value;
   const msg = t => { const el = document.querySelector("#tab-result .loading .msg"); if (el) el.textContent = t; };
   const pack = q => ({ q, K, plan: { K, z: q.z, best: q.exactBest, optimal: [], total: Math.pow(K, m.n - 1), ms: q.ms, costs: null, ...describe(m, q.z) } });
@@ -998,8 +1050,21 @@ $("runQuantum").addEventListener("click", () => {
     if (done) { state.qres = done.q; state.K = done.K; state.plan = done.plan; state.view = "zoned"; state.breach = null; state.zsel = null; }
     b.textContent = RUN_LABEL; renderAll(); if (done) startTween();
   }, Math.max(0, 900 - (performance.now() - shown)));
-  const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">The chip run did not finish</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
+  const fail = text => { b.textContent = RUN_LABEL; $("tab-result").innerHTML = `<div class="empty"><div class="big">${dw ? "The D-Wave run did not finish" : "The chip run did not finish"}</div><p class="note">${esc(text)}</p></div>`; syncQuantum(); };
   const body = { zones: K, backend: ibm ? "ibm" : "simulator", nodes: state.nodes.map(n => ({ name: n.name })), links: state.links.map(l => ({ a: indexOfId(l.a), b: indexOfId(l.b), t: l.t, r: l.r })) };
+  if (dw) {
+    body.backend = "dwave"; body.access_code = $("qCode").value.trim();
+    const poll = id => fetch(`/api/job/${id}`, { cache: "no-store" }).then(r => r.json()).then(j => {
+      if (j.status === "done") { const r = j.result; window.qsegmentLastRun = r; finish(pack({ K, z: r.zones, bestCost: r.cost, exactBest: null, ms: r.compute_ms, engine: "dwave" })); }
+      else if (j.status === "error") fail(j.error || "Something went wrong on the server.");
+      else { msg(j.status === "running" ? "Solving on D-Wave…" : "Sending the network to D-Wave…"); setTimeout(() => poll(id), 2500); }
+    }).catch(() => setTimeout(() => poll(id), 4000));
+    fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(r => r.json().then(j => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => { if (!ok) return fail(j.detail || "The server refused the run."); poll(j.job_id); })
+      .catch(() => fail("Could not reach the server."));
+    return;
+  }
   if (ibm) {
     body.access_code = $("qCode").value.trim(); body.chip = chip;
     const steps = { preparing: "Building the circuit…", queued: "Waiting in IBM's queue…", reading: "Reading the chip's answers…" };
@@ -1026,12 +1091,12 @@ async function checkServer() {
   try {
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);
     const r = await fetch("/api/health", { cache: "no-store", signal: ctl.signal }); clearTimeout(timer);
-    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); if (state.ibm && Array.isArray(j.ibm_chips)) document.querySelectorAll('#qMode option[value^="ibm:"]').forEach(o => { o.disabled = !j.ibm_chips.includes(o.value.slice(4)); }); }
+    if (r.ok) { const j = await r.json(); state.server = !!(j && j.ok); state.ibm = !!(j && j.backends && j.backends.includes("ibm")); state.dwave = !!(j && j.backends && j.backends.includes("dwave")); if (state.ibm && Array.isArray(j.ibm_chips)) document.querySelectorAll('#qMode option[value^="ibm:"]').forEach(o => { o.disabled = !j.ibm_chips.includes(o.value.slice(4)); }); }
   } catch (e) { state.server = false; }
   syncQuantum();
 }
 checkServer();
-$("qMode").addEventListener("change", () => { syncQuantum(); if ($("qMode").value.startsWith("ibm") && !state.ibm) checkServer(); });
+$("qMode").addEventListener("change", () => { syncQuantum(); const v = $("qMode").value; if ((v.startsWith("ibm") && !state.ibm) || (v === "dwave" && !state.dwave)) checkServer(); });
 $("qK").addEventListener("change", () => { state.qres = null; state.plan = null; state.K = 0; renderAll(); });
 loadPreset("hospital");
 syncK();
