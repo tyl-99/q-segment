@@ -61,14 +61,15 @@ def build_model(n, links, K):
     return m, z
 
 
-def solve(names, links, K, label="qsegment-web"):
+def solve(names, links, K, label="qsegment-web", time_limit=None):
     from dwave.system import LeapHybridNLSampler
     n = len(names)
     m, z = build_model(n, links, K)
     sampler = LeapHybridNLSampler(token=token())
     tmin = sampler.estimated_min_time_limit(m)
+    limit = max(tmin, min(float(time_limit or 0), 60.0))
     t0 = time.time()
-    res = sampler.sample(m, time_limit=tmin, label=label).result()
+    res = sampler.sample(m, time_limit=limit, label=label).result()
     wall = time.time() - t0
     mine = not m.is_locked()
     if mine:
@@ -101,7 +102,7 @@ def work(job_id, payload):
         names, links = solver.parse_network(payload)
         K = int(payload.get("zones", 3))
         set_job(job_id, status="running")
-        set_job(job_id, status="done", result=solve(names, links, K))
+        set_job(job_id, status="done", result=solve(names, links, K, time_limit=payload.get("time_limit")))
     except Exception as err:
         set_job(job_id, status="error", error=f"The D-Wave run failed: {err}")
 

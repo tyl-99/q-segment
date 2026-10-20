@@ -67,7 +67,7 @@ def run_dwave(payload):
 @app.get("/templates/{name}.json")
 def template(name: str):
     path = STATIC / f"{name}.json"
-    if name not in {"net100", "net200", "net500"} or not path.exists():
+    if name not in {"net100", "net200", "net500", "net1000"} or not path.exists():
         raise HTTPException(status_code=404, detail="No such template.")
     return FileResponse(path, media_type="application/json")
 

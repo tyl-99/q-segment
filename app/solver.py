@@ -23,6 +23,8 @@ def parse_network(payload):
         raise NetworkError("Add at least two systems.")
     out = []
     for link in links:
+        if isinstance(link, (list, tuple)):
+            link = {"a": link[0], "b": link[1], "t": link[2], "r": link[3]}
         a, b = int(link["a"]), int(link["b"])
         if not (0 <= a < len(names) and 0 <= b < len(names)) or a == b:
             raise NetworkError("A link points to a system that does not exist.")

@@ -131,6 +131,27 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px 
 .muted { color: var(--muted); }
 .big { font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
 .note { color: var(--muted); font-size: 0.85rem; }
+[hidden] { display: none !important; }
+.modesw { margin: 0; }
+.ent { display: grid; gap: 12px; }
+.entsteps { justify-self: start; margin: 0; }
+.entcard { padding: 22px; }
+.enth { margin: 0 0 12px; font-family: var(--display); font-size: 1.15rem; }
+.enth2 { margin: 18px 0 8px; font-weight: 700; }
+.entgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.drop { border: 2px dashed var(--wire); border-radius: 14px; padding: 26px; text-align: center; color: var(--muted); line-height: 1.6; }
+.drop b { display: block; color: var(--fg); font-family: var(--display); font-size: 1.1rem; margin-bottom: 6px; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.entrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+.mx { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.mx th, .mx td { border: 1px solid var(--line); padding: 8px 10px; text-align: center; }
+.mx th { background: var(--raised); }
+.entlinks div { padding: 6px 0; border-top: 1px solid var(--line); }
+.tag { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-left: 6px; }
+.tag.cut { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+.tag.in { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.entsearch { width: 100%; max-width: 420px; }
+@media (max-width: 760px) { .entgrid { grid-template-columns: minmax(0, 1fr); } }
 .warn { color: var(--warn); }
 .empty { display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
 .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
@@ -225,6 +246,7 @@ details.more.ibm { margin-top: 14px; }
   <header class="top">
     <div class="brand"><span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Q-Segment"><g class="lg-cell" stroke-width="2.2" stroke-linejoin="round"><polygon points="41.30,7.60 57.75,17.10 57.75,36.10 41.30,45.60 24.85,36.10 24.85,17.10"/><polygon points="19.70,45.00 36.15,54.50 36.15,73.50 19.70,83.00 3.25,73.50 3.25,54.50"/><polygon points="62.90,45.00 79.35,54.50 79.35,73.50 62.90,83.00 46.45,73.50 46.45,54.50"/><polygon points="41.30,82.40 57.75,91.90 57.75,110.90 41.30,120.40 24.85,110.90 24.85,91.90"/></g><g fill="#F2A33A" stroke="#F2A33A" stroke-width="2.2" stroke-linejoin="round"><polygon points="84.50,7.60 100.95,17.10 100.95,36.10 84.50,45.60 68.05,36.10 68.05,17.10"/><polygon points="106.10,45.00 122.55,54.50 122.55,73.50 106.10,83.00 89.65,73.50 89.65,54.50"/><polygon points="84.50,82.40 100.95,91.90 100.95,110.90 84.50,120.40 68.05,110.90 68.05,91.90"/></g></svg></span><span>Q-Segment<small>Network zoning that balances security and business.</small></span></div>
     <span class="grow"></span>
+    <div class="viewtabs modesw" role="group" aria-label="Mode"><button type="button" id="modePlay" aria-pressed="true" title="Draw and play with small networks">Playground</button><button type="button" id="modeEnt" aria-pressed="false" title="Load your own network and zone it on D-Wave">Enterprise</button></div>
     <select id="template" class="qsel tsel" aria-label="Load a template" title="Load an example network"><option value="" selected>Load template</option><option value="hospital">Hospital · 8 systems</option><option value="net100">Test network · 100 systems</option><option value="net200">Test network · 200 systems</option><option value="net500">Test network · 500 systems</option></select>
     <button type="button" class="btn ghost" id="clear">Clear</button>
     <button type="button" class="btn ghost icon" id="themeBtn" aria-label="Switch to light mode" title="Switch to light mode"></button>
@@ -276,6 +298,10 @@ details.more.ibm { margin-top: 14px; }
       </section>
       <aside class="card" aria-label="Zone plan"><div id="tab-result"></div></aside>
     </div>
+  </div>
+  <div class="ent" id="ent" hidden>
+    <div class="viewtabs entsteps" role="group" aria-label="Steps"><button type="button" data-step="0" aria-pressed="true">1 · Import</button><button type="button" data-step="1" aria-pressed="false" disabled>2 · Overview</button><button type="button" data-step="2" aria-pressed="false" disabled>3 · Zone plan</button></div>
+    <section class="card entcard" id="entBody" aria-live="polite"></section>
   </div>
 </div>
 
@@ -1100,6 +1126,148 @@ $("qMode").addEventListener("change", () => { syncQuantum(); const v = $("qMode"
 $("qK").addEventListener("change", () => { state.qres = null; state.plan = null; state.K = 0; renderAll(); });
 loadPreset("hospital");
 syncK();
+
+/* ---------------- enterprise mode ---------------- */
+const ENT = { names: [], types: [], links: [], z: null, step: 0, adj: null, source: "", ms: null, running: false };
+const ENT_LBL = { workstation: "workstations", laptop: "laptops", server: "servers", database: "databases", router: "routers", switch: "switches", firewall: "firewalls", cloud: "cloud services", medical: "medical devices", printer: "printers", system: "other systems" };
+const efmt = x => Number(x).toLocaleString();
+function setMode(m) {
+  const on = m === "ent";
+  document.querySelector(".main").hidden = on; $("ent").hidden = !on;
+  $("modePlay").setAttribute("aria-pressed", String(!on)); $("modeEnt").setAttribute("aria-pressed", String(on));
+  $("template").hidden = on; $("clear").hidden = on;
+  try { localStorage.setItem("qsegMode", m); } catch (e) {}
+  if (on) entRender();
+}
+function entStep(k) { ENT.step = k; entRender(); }
+function entSay(t) { const el = $("entMsg"); if (el) el.textContent = t; }
+function entLoaded(names, types, links, source) {
+  ENT.names = names; ENT.types = types; ENT.links = links; ENT.source = source; ENT.z = null; ENT.adj = null; ENT.ms = null; entStep(1);
+}
+async function entTemplate(name) {
+  if (!/^https?:$/.test(location.protocol)) { entSay("Test networks load only on the live site."); return; }
+  entSay("Loading…");
+  try {
+    const r = await fetch(`/templates/${name}.json`, { cache: "no-store" }); if (!r.ok) throw new Error(String(r.status));
+    const t = await r.json();
+    entLoaded(t.systems.map(x => String(x.name)), t.systems.map(x => (TYPE[x.type] ? x.type : "system")), t.links, t.name || name);
+  } catch (e) { entSay("Could not load that test network."); }
+}
+function parseCsv(text) { return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(",").map(c => c.trim().replace(/^"|"$/g, ""))); }
+async function entFiles(files) {
+  let sys = null, con = null;
+  for (const f of files) {
+    const rows = parseCsv(await f.text()); if (!rows.length) continue;
+    const h = rows[0].map(x => x.toLowerCase());
+    if (h.includes("traffic") || h.includes("risk") || rows[0].length >= 3) con = rows; else sys = rows;
+  }
+  if (!sys || !con) { entSay("Add both files: systems.csv (name,type) and connections.csv (system_a,system_b,traffic,risk)."); return; }
+  const body = rows => (isNaN(+rows[0][2]) && /^(name|system|system_a|a)$/i.test(rows[0][0]) ? rows.slice(1) : rows);
+  const names = [], types = [], idx = new Map();
+  for (const r of body(sys)) { if (!r[0] || idx.has(r[0])) continue; idx.set(r[0], names.length); names.push(r[0].slice(0, 40)); const t = (r[1] || "").toLowerCase(); types.push(TYPE[t] ? t : "system"); }
+  const links = []; let bad = 0;
+  for (const r of body(con)) {
+    const a = idx.get(r[0]), b = idx.get(r[1]), t = +r[2] || 0, rk = +r[3] || 0;
+    if (a === undefined || b === undefined || a === b || !(t >= 0 && t <= 10) || !(rk >= 0 && rk <= 10)) { bad++; continue; }
+    links.push([a, b, t, rk]);
+  }
+  if (names.length < 2) { entSay("systems.csv needs at least two systems."); return; }
+  entLoaded(names, types, links, [...files].map(f => f.name).join(" + ") + (bad ? ` (${bad} rows skipped: unknown name or value outside 0 to 10)` : ""));
+}
+function entCounts(pick) { const c = {}; ENT.types.forEach((t, i) => { if (!pick || pick(i)) c[t] = (c[t] || 0) + 1; }); return Object.entries(c).sort((a, b) => b[1] - a[1]); }
+function entAdj() {
+  if (ENT.adj) return ENT.adj;
+  const adj = ENT.names.map(() => []);
+  for (const [a, b, t, r] of ENT.links) { adj[a].push([b, t, r]); adj[b].push([a, t, r]); }
+  return (ENT.adj = adj);
+}
+function entHit(q) {
+  const k = q.trim().toLowerCase(); if (!k) return "";
+  const i = ENT.names.findIndex(n => n.toLowerCase() === k);
+  if (i < 0) return `<p class="note">No system named “${esc(q.trim())}”.</p>`;
+  const adj = entAdj()[i], top = adj.slice().sort((x, y) => y[1] - x[1] || y[2] - x[2]).slice(0, 5), z = ENT.z;
+  const zone = z ? ` · <b style="color:${zoneVar(z[i])}">Zone ${ZN[z[i]]}</b>` : "";
+  return `<div class="entlinks"><p><b>${esc(ENT.names[i])}</b> (${esc(TYPE[ENT.types[i]].label)})${zone} · ${efmt(adj.length)} connections. Busiest 5:</p>${top.map(([o, t, r]) => `<div>${esc(ENT.names[o])} · traffic ${t} · risk ${r}${z ? (z[o] !== z[i] ? `<span class="tag cut">needs a firewall rule</span>` : `<span class="tag in">inside the zone</span>`) : ""}</div>`).join("")}</div>`;
+}
+function entStats() {
+  const z = ENT.z, M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]; let rules = 0, risky = 0, cost = 0;
+  for (const [a, b, t, r] of ENT.links) {
+    if (z[a] !== z[b]) { cost += t; if (t > 0) { rules++; M[Math.min(z[a], z[b])][Math.max(z[a], z[b])]++; } }
+    else { cost += r; if (r > 0) risky++; }
+  }
+  return { rules, risky, cost, M };
+}
+function entRun() {
+  if (ENT.running) return;
+  const code = $("entCode").value.trim(), n = ENT.names.length;
+  ENT.running = true; const msg = t => { const el = $("entRunMsg"); if (el) el.textContent = t; };
+  $("entGo").disabled = true; $("entGo").innerHTML = `<span class="spin"></span> Running…`; msg("Sending the network to D-Wave…");
+  const done = err => { ENT.running = false; if (err) { msg(err); const b = $("entGo"); if (b) { b.disabled = false; b.textContent = RUN_LABEL; } } };
+  const body = { zones: 3, backend: "dwave", access_code: code, time_limit: n > 500 ? 45 : 0, nodes: ENT.names.map(name => ({ name })), links: ENT.links };
+  const poll = id => fetch(`/api/job/${id}`, { cache: "no-store" }).then(r => r.json()).then(j => {
+    if (j.status === "done") { ENT.z = j.result.zones; ENT.ms = j.result.compute_ms; done(); entStep(2); }
+    else if (j.status === "error") done(j.error || "The D-Wave run failed.");
+    else { msg(j.status === "running" ? "Solving on D-Wave…" : "Sending the network to D-Wave…"); setTimeout(() => poll(id), 2500); }
+  }).catch(() => setTimeout(() => poll(id), 4000));
+  fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    .then(r => r.json().then(j => ({ ok: r.ok, j })))
+    .then(({ ok, j }) => { if (!ok) return done(j.detail || "The server refused the run."); poll(j.job_id); })
+    .catch(() => done("Could not reach the server."));
+}
+function entSolverRow() {
+  const n = ENT.names.length, ready = state.server && state.dwave;
+  const note = !state.server ? "D-Wave runs work only on the live site." : !state.dwave ? "D-Wave runs are not switched on for this site yet." : `Runs on D-Wave's Stride hybrid solver in the Leap cloud, ${n > 500 ? "45 s for networks over 500 systems; the answer takes about 1 to 2 min" : "5 s; the answer takes about 10 to 60 s"}.`;
+  return `<p class="enth2">Zone it</p><div class="entrow"><input id="entCode" class="input" type="password" autocomplete="off" placeholder="Q-Segment access code" value="${esc($("qCode").value)}"><button type="button" class="btn primary" id="entGo" ${ready ? "" : "disabled"}>${RUN_LABEL}</button></div><p class="note" id="entRunMsg">${note}</p>`;
+}
+function entRender() {
+  const el = $("entBody"); if (!el) return;
+  document.querySelectorAll(".entsteps button").forEach(b => { const k = +b.dataset.step; b.setAttribute("aria-pressed", String(k === ENT.step)); b.disabled = k === 1 ? !ENT.names.length : k === 2 ? !ENT.z : false; });
+  if (ENT.step === 0) {
+    el.innerHTML = `<h3 class="enth">Bring your network</h3>
+      <div class="drop" id="entDrop"><b>Drop systems.csv and connections.csv here</b>systems.csv: <code>name,type</code> &nbsp;·&nbsp; connections.csv: <code>system_a,system_b,traffic,risk</code> (traffic and risk 0 to 10)
+      <div class="entrow" style="justify-content:center"><label class="btn"><input type="file" id="entFiles" accept=".csv,text/csv" multiple hidden>Choose files</label></div></div>
+      <div class="entrow"><span class="muted">Or load a test network:</span>${[100, 200, 500, 1000].map(n => `<button type="button" class="btn" data-net="net${n}">${efmt(n)} systems</button>`).join("")}</div>
+      <p class="note" id="entMsg">${ENT.names.length ? `Loaded: ${esc(ENT.source)}, ${efmt(ENT.names.length)} systems.` : ""}</p>`;
+    const drop = $("entDrop");
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); entFiles(e.dataTransfer.files); });
+    $("entFiles").addEventListener("change", e => entFiles(e.target.files));
+    el.querySelectorAll("[data-net]").forEach(b => b.addEventListener("click", () => entTemplate(b.dataset.net)));
+    return;
+  }
+  if (ENT.step === 1) {
+    const c = entCounts();
+    el.innerHTML = `<h3 class="enth">${esc(ENT.source)}</h3>
+      <div class="kpis"><div class="kpi"><b>${efmt(ENT.names.length)}</b><span>systems</span></div><div class="kpi"><b>${efmt(ENT.links.length)}</b><span>connections</span></div><div class="kpi"><b>${c.length}</b><span>device types</span></div></div>
+      <p class="enth2">By device type</p><div class="entgrid">${c.map(([t, v]) => `<div class="kpi"><b>${efmt(v)}</b><span>${ENT_LBL[t] || t}</span></div>`).join("")}</div>
+      <p class="enth2">Find a system</p><input class="input entsearch" id="entQ" placeholder="Type a name, for example ${esc(ENT.names[0])}"><div id="entHit"></div>
+      ${entSolverRow()}`;
+    $("entQ").addEventListener("input", e => { $("entHit").innerHTML = entHit(e.target.value); });
+    $("entGo").addEventListener("click", entRun);
+    return;
+  }
+  const st = entStats(), z = ENT.z;
+  const zones = [0, 1, 2].filter(k => z.includes(k)).map(k => `<div class="zcard" style="--zc:${zoneVar(k)}"><h4>Zone ${ZN[k]}<span class="muted">${efmt(z.filter(v => v === k).length)} systems</span></h4><p class="note">${entCounts(i => z[i] === k).map(([t, v]) => `${efmt(v)} ${ENT_LBL[t] || t}`).join(" · ")}</p></div>`).join("");
+  el.innerHTML = `<h3 class="enth">Zone plan · ${esc(ENT.source)}</h3>
+    <div class="kpis"><div class="kpi"><b>${efmt(st.rules)}</b><span>firewall rules to create</span></div><div class="kpi"><b>${efmt(st.risky)}</b><span>risky pairs left inside zones</span></div><div class="kpi"><b>${ENT.ms != null ? Math.round(ENT.ms / 1000) + " s" : "—"}</b><span>time to answer on D-Wave</span></div></div>
+    <div class="entgrid">${zones}</div>
+    <p class="enth2">Firewall rules between zones</p>
+    <table class="mx"><tr><th></th><th>Zone B</th><th>Zone C</th></tr><tr><th>Zone A</th><td>${efmt(st.M[0][1])}</td><td>${efmt(st.M[0][2])}</td></tr><tr><th>Zone B</th><td>·</td><td>${efmt(st.M[1][2])}</td></tr></table>
+    <p class="enth2">Where did my system go?</p><input class="input entsearch" id="entQ" placeholder="Type a name, for example ${esc(ENT.names[0])}"><div id="entHit"></div>
+    <div class="entrow"><button type="button" class="btn" id="entCsv">Download firewall rules (CSV)</button><span class="note">Plan cost ${efmt(st.cost)} (traffic across zones + risk inside zones; lower is better)</span></div>`;
+  $("entQ").addEventListener("input", e => { $("entHit").innerHTML = entHit(e.target.value); });
+  $("entCsv").addEventListener("click", () => {
+    const lines = ["zone_a,zone_b,system_a,system_b,traffic"];
+    for (const [a, b, t] of ENT.links) if (z[a] !== z[b] && t > 0) lines.push([ZN[z[a]], ZN[z[b]], ENT.names[a], ENT.names[b], t].join(","));
+    const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })), link = document.createElement("a");
+    link.href = url; link.download = "q-segment-firewall-rules.csv"; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  });
+}
+document.querySelectorAll(".entsteps button").forEach(b => b.addEventListener("click", () => entStep(+b.dataset.step)));
+$("modePlay").addEventListener("click", () => setMode("play"));
+$("modeEnt").addEventListener("click", () => { setMode("ent"); if (!state.dwave) checkServer().then(() => { if (ENT.step === 1) entRender(); }); });
+try { if (localStorage.getItem("qsegMode") === "ent") setMode("ent"); } catch (e) {}
 </script>
 
 </body>
